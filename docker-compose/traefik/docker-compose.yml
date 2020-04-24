@@ -1,0 +1,40 @@
+version: '3.5'
+
+services:
+  traefik:
+    image: "traefik:v2.1"
+    container_name: traefik
+    command:
+      - --entrypoints.websecure.address=:${TREAFIK_BASE_PORT}
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false 
+      - --providers.docker.network=traefik 
+      - --api.dashboard=true
+      - --providers.file.filename=
+    restart: unless-stopped
+    ports:
+      - "${TREAFIK_BASE_PORT}"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      - "${DATA_PATH}/certs:/certs:ro"
+    labels:
+      - "traefik.http.routers.api.entrypoints=websecure"
+      - "traefik.http.routers.api.rule=Host(`traefik.${BASE_URL}`)"
+      - "traefik.http.routers.api.service=api@internal"
+      - "traefik.http.routers.api.middlewares=auth"
+      - "traefik.http.middlewares.auth.basicauth.users=${BASICAUTH_HTPASSWD}"
+      - "traefik.http.routers.api.tls=true"
+      - "traefik.http.routers.api.tls.certresolver=cert"
+      - "traefik.enable=true"
+      - "traefik.docker.network=traefik"
+  lego:
+    build: ./lego
+    container_name: lego
+    image: lego
+    restart: unless-stopped
+    volumes: 
+      - "${DATA_PATH}/certs:/certs"
+networks:
+  default:
+    driver: bridge
+    name: traefik

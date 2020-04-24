@@ -1,0 +1,8 @@
+#!/usr/bin/env ruby
+
+# require "bundler/setup"
+# $:.push File.expand_path("../../lib", __FILE__)
+
+require "anas"
+
+Anas::Commands.start
