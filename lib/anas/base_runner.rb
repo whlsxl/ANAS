@@ -41,7 +41,7 @@ module Anas
       @mod_name = get_mod_name
       Log.info("Init `#{@mod_name}`` class")
       ObjectSpace.define_finalizer(self, lambda do |id| 
-        FileUtils.remove_entry(@working_path)
+        # FileUtils.remove_entry(@working_path)
       end)
 
     end
