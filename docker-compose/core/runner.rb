@@ -9,5 +9,8 @@ module Anas
       @dependent_mods = []
     end
 
+    def start
+      Log.debug("Core don't need run docker-compose")
+    end
   end
 end

@@ -123,9 +123,13 @@ module Anas
       end
     end
 
+    def run_mod(mods, )
+      
+    end
+
     def start
       envs = cal_envs(@mods, @config_envs)
-      puts envs
+      Log.debug("Calculate envs is \n #{envs}")
       missing_envs = check_envs(@mods, envs)
       unless missing_envs.empty?
         Log.error("Have missing envs\n#{missing_envs}")
