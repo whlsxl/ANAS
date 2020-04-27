@@ -10,14 +10,14 @@ services:
       - --providers.docker.exposedbydefault=false 
       - --providers.docker.network=traefik 
       - --api.dashboard=true
-      - --providers.file.filename=/cert.yaml
+      - --providers.file.filename=/cert.yml
     restart: unless-stopped
     ports:
       - "${TREAFIK_BASE_PORT}"
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
       - "${DATA_PATH}/certs:/certs:ro"
-      - "cert.yaml:/cert.yaml"
+      - "cert.yml:/cert.yml"
     labels:
       - "traefik.http.routers.api.entrypoints=websecure"
       - "traefik.http.routers.api.rule=Host(`traefik.${BASE_URL}`)"

@@ -21,7 +21,7 @@ module Anas
       program :help, 'GitHub', 'TODO'
 
       global_option('--verbose') { $verbose = true; Log.level = Logger::DEBUG }
-      global_option('-c', '--config FILE', 'Load config yml, default: ./config.yaml')
+      global_option('-c', '--config FILE', 'Load config yml, default: ./config.yml')
 
       command :start do |c|
         c.syntax = 'anas start [options]'
@@ -53,7 +53,7 @@ module Anas
     end
 
     def load_config_file(file)
-      file || file = 'config.yaml'
+      file || file = 'config.yml'
       config = YAML.load_file(file)
       check_config(config)
       return config
