@@ -21,7 +21,7 @@ module Anas
       program :help, 'GitHub', 'TODO'
 
       global_option('--verbose') { $verbose = true; Log.level = Logger::DEBUG }
-      global_option('-c', '--config FILE', 'Load config yml, default: ./config.yml')
+      global_option('-c', '--config FILE', 'Load config yml, default: ./config.yaml')
 
       command :start do |c|
         c.syntax = 'anas start [options]'
@@ -53,7 +53,7 @@ module Anas
     end
 
     def load_config_file(file)
-      file || file = 'config.yml'
+      file || file = 'config.yaml'
       config = YAML.load_file(file)
       check_config(config)
       return config
@@ -62,12 +62,12 @@ module Anas
     def check_config(config)
       unless config['mods'] || config['mods'].is_a?(Array)
         Log.error('No `modules` in #{file}')
-        raise Anas::ConfigError
+        raise ConfigError
       end
 
       unless config['envs'] || config['envs'].is_a?(Hash)
         Log.error('No `envs` in #{file}')
-        raise Anas::ConfigError
+        raise ConfigError
       end
     end
   end

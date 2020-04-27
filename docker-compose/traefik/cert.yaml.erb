@@ -1,0 +1,6 @@
+tls:
+  certificates:
+    - certFile: /path/to/domain.cert
+      keyFile: <%= envs["HNAME"] %>
+      stores:
+        - default
