@@ -119,12 +119,9 @@ module Anas
 
     def start
       Log.info("Start #{@mod_name}")
-
       begin
-        result = system(@envs, "echxo $BASE_URL", exception: true)
-        puts result
-        # result = system(@envs, "docker-compose up -d", exception: true)
         Dir.chdir(@working_path)
+        result = system(@envs, "docker-compose up -d", exception: true)
       rescue => exception
         Log.error("Start #{@mod_name} ERROR #{exception}")
         raise exception
