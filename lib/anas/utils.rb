@@ -123,10 +123,6 @@ module Anas
       end
     end
 
-    def run_mod(mods, )
-      
-    end
-
     def start
       envs = cal_envs(@mods, @config_envs)
       Log.debug("Calculate envs is \n #{envs}")
