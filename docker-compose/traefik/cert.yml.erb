@@ -1,6 +1,6 @@
 tls:
   certificates:
-    - certFile: /path/to/domain.cert
-      keyFile: <%= envs["HNAME"] %>
+    - certFile: /certs/<%= envs["BASE_URL"] %>.cert
+      keyFile: /certs/<%= envs["BASE_URL"] %>.key
       stores:
         - default
