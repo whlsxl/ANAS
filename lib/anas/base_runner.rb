@@ -120,6 +120,11 @@ module Anas
     def start
       Log.info("Start #{@mod_name}")
       begin
+        stop
+      rescue => exception
+        Log.info("Stop #{@mod_name} ERROR #{exception}")
+      end
+      begin
         Log.debug("Entry working_path #{@working_path}")
         Dir.chdir(@working_path)
         result = system(@envs, "docker-compose up -d", exception: true)
