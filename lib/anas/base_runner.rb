@@ -73,7 +73,7 @@ module Anas
     end
 
     def render_erbs!(envs)
-      reset_working_path
+      reset_temp_path
       FileUtils.copy_entry(get_docker_compose_path, "@working_path")
       Log.info("Rendering `#{@mod_name}` erbs'")
       Log.debug("Copy the docker-compose dir from #{get_docker_compose_path} to #{@working_path}")
