@@ -130,8 +130,14 @@ module Anas
     end
 
     def stop
-      Dir.chdir(@docker_compose_path)
-      
+      begin
+        Log.debug("Entry working_path #{@working_path}")
+        Dir.chdir(@working_path)
+        result = system(@envs, "docker-compose down", exception: true)
+      rescue => exception
+        Log.error("Start #{@mod_name} ERROR #{exception}")
+        raise exception
+      end
     end
 
   end
