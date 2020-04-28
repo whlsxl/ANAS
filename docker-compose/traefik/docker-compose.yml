@@ -17,7 +17,7 @@ services:
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
       - "${DATA_PATH}/certs:/certs:ro"
-      - "cert.yml:/cert.yml"
+      - "./cert.yml:/cert.yml"
     labels:
       - "traefik.http.routers.api.entrypoints=websecure"
       - "traefik.http.routers.api.rule=Host(`traefik.${BASE_URL}`)"
