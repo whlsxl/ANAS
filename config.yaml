@@ -1,6 +1,0 @@
-mods:
-  - traefik
-envs:
-  EMAIL: "whlsxl@gmail.com"
-  BASE_URL: "qc.letuh.com"
-  TRAEFIK_LEGO_DNS_PROVIDER: "dnspod"

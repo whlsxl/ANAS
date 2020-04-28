@@ -65,15 +65,16 @@ module Anas
       return File.join(root_path, 'docker-compose', @mod_name)
     end
 
-    def reset_working_path
-      FileUtils.remove_entry(@working_path) unless @working_path.nil?
-      @working_path = Dir.mktmpdir
-      Log.info("Working path is #{@working_path}")
+    def reset_temp_path
+      FileUtils.remove_entry(@temp_path) unless @temp_path.nil?
+      @temp_path = Dir.mktmpdir
+      @working_path = "#{@temp_path}/#{mod_name}"
+      Log.info("Temp path is #{@temp_path}")
     end
 
     def render_erbs!(envs)
       reset_working_path
-      FileUtils.copy_entry(get_docker_compose_path, @working_path)
+      FileUtils.copy_entry(get_docker_compose_path, "@working_path")
       Log.info("Rendering `#{@mod_name}` erbs'")
       Log.debug("Copy the docker-compose dir from #{get_docker_compose_path} to #{@working_path}")
       envs_hash = {envs: envs}
@@ -122,7 +123,7 @@ module Anas
       begin
         stop
       rescue => exception
-        Log.info("Stop #{@mod_name} ERROR #{exception}")
+        Log.info("Stop ERROR doesn't matter")
       end
       begin
         Log.debug("Entry working_path #{@working_path}")
@@ -132,15 +133,17 @@ module Anas
         Log.error("Start #{@mod_name} ERROR #{exception}")
         raise exception
       end
+      Log.debug("Module start #{@mod_name}")
     end
 
     def stop
+      Log.info("Stop #{@mod_name}")
       begin
         Log.debug("Entry working_path #{@working_path}")
         Dir.chdir(@working_path)
         result = system(@envs, "docker-compose down", exception: true)
       rescue => exception
-        Log.error("Start #{@mod_name} ERROR #{exception}")
+        Log.error("Stop #{@mod_name} ERROR #{exception}")
         raise exception
       end
     end
