@@ -1,4 +1,5 @@
 require 'logger'
+require 'tmpdir'
 
 # The base class & method for A NAS
 module Anas
@@ -8,16 +9,19 @@ module Anas
 
   # Loggers, default level is `info`
   Log = Logger.new(STDOUT)
-  Log.level = Logger::DEBUG
 
   class Starter
-    def initialize(config)
+    def initialize(options, config)
+      Log.info("Log level set to #{options[:log_level]}")
+      Log.level = options[:log_level]
+      @options = options
       @mods = config['mods']
       @config_envs = config['envs']
 
       # start
       @runner_classes = {}
       @running_mods = []
+      @built_mods = []
 
     end
 
@@ -26,6 +30,7 @@ module Anas
       begin
         require "#{mod}/runner"
         runner = "Anas::#{mod.camelize}Runner".classify.new
+        runner.tmp_path = File.join(Dir.tmpdir, "anas")
         @runner_classes[mod] = runner
         return runner
       rescue => exception
@@ -81,22 +86,24 @@ module Anas
     def cal_envs(mods, envs)
       Log.info("Calculate the envs")
       default_envs = get_default_envs(mods)
-      system_envs = ENV.to_hash
+      # system_envs = ENV.to_hash # don't import system envs
 
       full_envs = default_envs
-      full_envs.update(system_envs)
+      # full_envs.update(system_envs)
       full_envs.update(envs)
 
       @caled_mods = []
       def mod_cal_envs(mod, envs)
-        return {} if @caled_mods.include?(mod)
+        return envs if @caled_mods.include?(mod)
         runner = mod_runner!(mod)
         new_envs = envs
         runner.dependent_mods.each do |dmod|
           new_envs = mod_cal_envs(dmod, new_envs)
         end
         @caled_mods.append(mod)
-        return runner.cal_envs(new_envs)
+        envs = runner.cal_envs(new_envs)
+        runner.gen_envs_file(envs)
+        return envs
       end
 
       mods.each do |mod|
@@ -123,7 +130,43 @@ module Anas
       end
     end
 
-    def start
+    def stop_mods(mods, envs)
+      Log.info("Start run modules")
+      @running_mods = []
+      def stop_mod(mod, envs)
+        return {} if @running_mods.include?(mod)
+        runner = mod_runner!(mod)
+        runner.dependent_mods.each do |dmod|
+          stop_mod(dmod, envs)
+        end
+        runner.envs = envs
+        runner.start
+        @running_mods.append(mod)
+      end
+      mods.each do |mod|
+        stop_mod(mod, envs)
+      end
+    end
+
+    def build_mods(mods, envs)
+      Log.info("Start build modules")
+      @built_mods = []
+      def build_mod(mod, envs)
+        return {} if @built_mods.include?(mod)
+        runner = mod_runner!(mod)
+        runner.dependent_mods.each do |dmod|
+          build_mod(dmod, envs)
+        end
+        runner.envs = envs
+        runner.build
+        @built_mods.append(mod)
+      end
+      mods.each do |mod|
+        build_mod(mod, envs)
+      end
+    end
+
+    def process_envs()
       envs = cal_envs(@mods, @config_envs)
       Log.debug("Calculate envs is \n #{envs}")
       missing_envs = check_envs(@mods, envs)
@@ -131,9 +174,30 @@ module Anas
         Log.error("Have missing envs\n#{missing_envs}")
         raise NoENVError.new(missing_envs)
       end
+      return envs
+    end
+
+    def start
+      envs = process_envs
+      if options[:build]
+        build_mods(@mods, envs)
+      end
       start_mods(@mods, envs)
       # mod_runner!('traefik').run(envs)
     end
+
+    def build
+      envs = process_envs
+      build_mods(@mods, envs)
+      # mod_runner!('traefik').run(envs)
+    end
+
+    def stop
+      envs = process_envs
+      stop_mods(@mods, envs)
+      # mod_runner!('traefik').run(envs)
+    end
+
 
   end
 end

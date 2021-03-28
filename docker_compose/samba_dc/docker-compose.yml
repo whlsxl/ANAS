@@ -1,0 +1,33 @@
+version: "3.5"
+
+services:
+  samba_dc:
+    container_name: ${CONTAINER_PREFIX}samba_dc
+    build: ./samba_dc
+    image: ${IMAGE_PREFIX}samba_dc
+    restart: unless-stopped
+    network_mode: host
+    cap_add:
+      - SYS_ADMIN
+    env_file:
+      - samba_dc.env
+    volumes:
+      - "${TRAEFIK_LEGO_CERTS_PATH}:/certs:ro"
+      - "${DATA_PATH}/samba_dc/conf:/etc/samba"
+      - "${DATA_PATH}/samba_dc/var:/var/lib/samba"
+    ports:
+      - 53:53
+      - 53:53/udp
+      - 88:88
+      - 88:88/udp
+      - 135:135
+      - 137-138:137-138/udp
+      - 139:139
+      - 389:389
+      - 389:389/udp
+      - 445:445
+      - 464:464
+      - 464:464/udp
+      - 636:636
+      - 3268-3269:3268-3269
+      - 49152-65535

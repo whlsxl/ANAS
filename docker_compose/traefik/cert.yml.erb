@@ -1,0 +1,6 @@
+tls:
+  certificates:
+    - certFile: /certs/<%= envs["TRAEFIK_LEGO_CERT_NAME"] %>
+      keyFile: /certs/<%= envs["TRAEFIK_LEGO_KEY_NAME"] %>
+      stores:
+        - default

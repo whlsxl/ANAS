@@ -13,16 +13,21 @@ module Anas
     # @return [Hash<String, String>] the default value of env
     attr_reader :default_envs
 
-    # @return [Array<String>] the dependence of the module, 
-    #   dependence must run first
+    # @return [Array<String>] the dependency of the module, 
+    #   dependency must run first
     attr_reader :dependent_mods
 
     # @return [String] the module name of child class
     attr_reader :mod_name
 
+    # @return [String] the tmp dir path,
+    #    working_path will be "${@tmp_path}/@mod_name"
+    #    default is File.join(Dir.tmpdir, "anas")
+    attr_reader :tmp_path
+    
     # @return [String] copy & render erb files to temp dir
     attr_reader :working_path
-    
+
     # @return [String] All the envs use in docker
     attr_reader :envs
 
@@ -32,6 +37,13 @@ module Anas
       render_erbs!(new_envs)
     end
 
+    def tmp_path=(new_tmp_path)
+      @tmp_path = new_tmp_path
+      @working_path = File.join(@tmp_path ,@mod_name)
+      remove_temp_path
+      FileUtils.mkdir_p @working_path
+    end
+
     # Runner should set the values
     def initialize()
       @required_envs = []
@@ -39,11 +51,11 @@ module Anas
       @dependent_mods = []
       @optional_envs = []
       @mod_name = get_mod_name
+      @working_path = nil
       Log.info("Init `#{@mod_name}`` class")
       ObjectSpace.define_finalizer(self, lambda do |id| 
         # FileUtils.remove_entry(@working_path)
       end)
-
     end
 
     # get the module name by class name
@@ -62,20 +74,17 @@ module Anas
     # @return [String] the module path
     def get_docker_compose_path
       root_path = File.expand_path('../../..', __FILE__)
-      return File.join(root_path, 'docker-compose', @mod_name)
+      return File.join(root_path, 'docker_compose', @mod_name)
     end
 
-    def reset_temp_path
-      FileUtils.remove_entry(@temp_path) unless @temp_path.nil?
-      @temp_path = Dir.mktmpdir
-      @working_path = "#{@temp_path}/#{mod_name}"
-      Log.info("Temp path is #{@temp_path}")
+    def remove_temp_path
+      FileUtils.rm_rf("#{@working_path}")
+      Log.info("#{@mod_name} temp path is #{@working_path}")
     end
 
     def render_erbs!(envs)
-      reset_temp_path
-      Log.debug("Copy `#{@mod_name}` docker-compose dir from #{get_docker_compose_path} to #{@working_path}")
-      FileUtils.copy_entry(get_docker_compose_path, @working_path)
+      Log.debug("Copy `#{@mod_name}` docker_compose dir from #{get_docker_compose_path} to #{@working_path}")
+      FileUtils.cp_r("#{get_docker_compose_path}/.", @working_path)
       Log.info("Rendering `#{@mod_name}` erbs'")
       envs_hash = {envs: envs}
       Dir.glob("#{@working_path}/**/*.erb").each do |erb_file|
@@ -118,34 +127,61 @@ module Anas
       return envs
     end
 
-    def start
-      Log.info("Start #{@mod_name}")
-      begin
-        stop
-      rescue => exception
-        Log.info("Stop ERROR doesn't matter")
+    def gen_envs_file(envs)
+      env_file = File.expand_path("#{@mod_name}.env", @working_path)
+      File.open(env_file, 'w') do |file|
+        envs.each do |key, value|
+          file.write "#{key}=#{value}\n"
+        end
       end
+    end
+
+    def build
+      Log.info("Building #{@mod_name}...")
       begin
-        Log.debug("Entry working_path #{@working_path}")
+        Log.debug("Entry @working_path #{@working_path}")
+        Dir.chdir(@working_path)
+        result = system(@envs, "docker-compose build", exception: true)
+      rescue => exception
+        Log.error("Building #{@mod_name} ERROR #{exception}")
+        raise exception
+      end
+      Log.info("Module built #{@mod_name}")
+    end
+
+    def start
+      Log.info("Starting #{@mod_name}...")
+      begin
+        Log.debug("Entry @working_path #{@working_path}")
         Dir.chdir(@working_path)
         result = system(@envs, "docker-compose up -d", exception: true)
       rescue => exception
         Log.error("Start #{@mod_name} ERROR #{exception}")
         raise exception
       end
-      Log.debug("Module start #{@mod_name}")
+      Log.info("Module started #{@mod_name}")
+    end
+
+    def restart
+      begin
+        stop
+      rescue => exception
+        Log.info("Stop ERROR, but doesn't matter")
+      end
+      start
     end
 
     def stop
-      Log.info("Stop #{@mod_name}")
+      Log.info("Stoping #{@mod_name}...")
       begin
-        Log.debug("Entry working_path #{@working_path}")
+        Log.debug("Entry @working_path #{@working_path}")
         Dir.chdir(@working_path)
         result = system(@envs, "docker-compose down", exception: true)
       rescue => exception
         Log.error("Stop #{@mod_name} ERROR #{exception}")
         raise exception
       end
+      Log.info("Module stopped #{@mod_name}")
     end
 
   end

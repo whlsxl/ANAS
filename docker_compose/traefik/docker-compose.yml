@@ -1,22 +1,25 @@
-version: '3.5'
+version: "3.5"
 
 services:
   traefik:
     image: "traefik:v2.1"
-    container_name: traefik
+    container_name: ${CONTAINER_PREFIX}traefik
     command:
       - --entrypoints.websecure.address=:${TREAFIK_BASE_PORT}
       - --providers.docker=true
-      - --providers.docker.exposedbydefault=false 
-      - --providers.docker.network=traefik 
+      - --providers.docker.exposedbydefault=false
+      - --providers.docker.network=traefik
       - --api.dashboard=true
       - --providers.file.filename=/cert.yml
     restart: unless-stopped
+    environment:
+      - TRAEFIK_LEGO_CERT_PATH
+      - TRAEFIK_LEGO_KEY_PATH
     ports:
       - "${TREAFIK_BASE_PORT}"
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
-      - "${DATA_PATH}/certs:/certs:ro"
+      - "${TRAEFIK_LEGO_CERTS_PATH}:/certs:ro"
       - "./cert.yml:/cert.yml:ro"
     labels:
       - "traefik.http.routers.api.entrypoints=websecure"
@@ -30,13 +33,13 @@ services:
       - "traefik.docker.network=traefik"
   lego:
     build: ./lego
-    container_name: lego
+    container_name: ${CONTAINER_PREFIX}lego
     image: lego
     restart: unless-stopped
-    volumes: 
-      - "${DATA_PATH}/certs:/certs"
+    volumes:
+      - "${TRAEFIK_LEGO_DATA_PATH}:/certs"
     env_file:
-      - lego.env
+      - traefik.env
 
 networks:
   default:

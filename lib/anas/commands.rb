@@ -20,19 +20,66 @@ module Anas
       program :help, 'Author', 'Hailong Wang <whlsxl+g@gmail.com>'
       program :help, 'GitHub', 'TODO'
 
-      global_option('--verbose') { $verbose = true; Log.level = Logger::DEBUG }
+      global_option('--verbose')
       global_option('-c', '--config FILE', 'Load config yml, default: ./config.yml')
 
       command :start do |c|
         c.syntax = 'anas start [options]'
         c.summary = ''
         c.description = ''
-        c.example 'description', 'command example'
-        # c.option '', 'Some switch that does something'
+        c.example 'description', 'Start modules'
+        c.option '-b', '--build', 'Build before start'
         c.action do |args, options|
-          config = load_config_file(options[:file])
-          starter = Anas::Starter.new(config)
+          options.default :build => false
+          options_new = options.__hash__
+          if options_new[:verbose] == true then
+            options_new[:log_level] = Logger::DEBUG
+          else 
+            options_new[:log_level] = Logger::WARN
+          end
+          config = load_config_file(options_new[:file])
+
+          starter = Anas::Starter.new(options_new, config)
           starter.start
+        end
+      end
+
+      command :build do |c|
+        c.syntax = 'anas build [options]'
+        c.summary = ''
+        c.description = ''
+        c.example 'description', 'Build all modules'
+        c.action do |args, options|
+          options.default :build => false
+          options_new = options.__hash__
+          if options_new[:verbose] == true then
+            options_new[:log_level] = Logger::DEBUG
+          else 
+            options_new[:log_level] = Logger::WARN
+          end
+          config = load_config_file(options[:file])
+          starter = Anas::Starter.new(options_new, config)
+          starter.build
+        end
+      end
+
+      command :stop do |c|
+        c.syntax = 'anas stop [options]'
+        c.summary = ''
+        c.description = ''
+        c.example 'description', 'Stop modules'
+        c.option '-a', '--all', 'Stop all modules'
+        c.action do |args, options|
+          options_new = options.__hash__
+          if options_new[:verbose] == true then
+            options_new[:log_level] = Logger::DEBUG
+          else 
+            options_new[:log_level] = Logger::WARN
+          end
+          config = load_config_file(options_new[:file])
+
+          starter = Anas::Starter.new(options_new, config)
+          starter.stop
         end
       end
 
@@ -61,12 +108,12 @@ module Anas
 
     def check_config(config)
       unless config['mods'] || config['mods'].is_a?(Array)
-        Log.error('No `modules` in #{file}')
+        Log.error("No `modules` in #{file}")
         raise ConfigError
       end
 
       unless config['envs'] || config['envs'].is_a?(Hash)
-        Log.error('No `envs` in #{file}')
+        Log.error("No `envs` in #{file}")
         raise ConfigError
       end
     end
