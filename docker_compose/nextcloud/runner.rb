@@ -4,8 +4,8 @@ module Anas
     def initialize()
       super
       @required_envs = ['MYSQL_ROOT_PASSWORD'] # TODO
-      @optional_envs = ['NEXTCLOUD_DOMAIN_PREFIX', 'NEXTCLOUD_MYSQL_DATABASE']
-      @default_envs = {'NEXTCLOUD_DOMAIN_PREFIX' => 'nc', 'NEXTCLOUD_MYSQL_DATABASE' => 'nextcloud',
+      @optional_envs = ['NEXTCLOUD_DOMAIN_PREFIX', 'NEXTCLOUD_DB_NAME']
+      @default_envs = {'NEXTCLOUD_DOMAIN_PREFIX' => 'nc', 'NEXTCLOUD_DB_NAME' => 'nextcloud',
         'MEMORY_LIMIT' => '512M', 'UPLOAD_MAX_SIZE' => '512M',
         'OPCACHE_MEM_SIZE' => '128', 'APC_SHM_SIZE' => '128M', 'REAL_IP_FROM' => '0.0.0.0/32',
         'REAL_IP_HEADER' => 'X-Forwarded-For', 'LOG_IP_VAR' => 'http_x_forwarded_for',

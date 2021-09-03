@@ -273,7 +273,7 @@ module Anas
     def stop_mods(mods)
       Log.info("Stop modules")
       dependent_tree = DependentTree.new(mods)
-      
+
       def stop_mod(node, dependent_tree)
         node.dependency_nodes.each do |mod_name, n|
           stop_mod(n, dependent_tree)
@@ -321,6 +321,16 @@ module Anas
       write_config!
     end
 
+    def restart
+      envs = process_envs
+      stop_mods(@mods)
+      if @options[:build]
+        build_mods(@mods, envs)
+      end
+      start_mods(@mods, envs)
+      write_config!
+    end
+
     def build
       envs = process_envs
       build_mods(@mods, envs)
@@ -329,9 +339,6 @@ module Anas
     end
 
     def stop
-      if @mods
-
-      end
       envs = process_envs
       stop_mods(@mods)
       # mod_runner!('traefik').run(envs)

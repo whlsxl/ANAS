@@ -4,7 +4,7 @@ module Anas
     def initialize()
       super
       @required_envs = []
-      @dependent_mods = []
+      @dependent_mods = ['core']
     end
 
     def cal_envs(envs)

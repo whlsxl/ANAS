@@ -44,6 +44,29 @@ module Anas
         end
       end
 
+      command :restart do |c|
+        c.syntax = 'anas retart [options]'
+        c.summary = ''
+        c.description = ''
+        c.example 'description', 'Restart modules'
+        c.option '-b', '--build', 'Build before start'
+        c.action do |args, options|
+          options.default :build => false
+          options_new = options.__hash__
+          if options_new[:verbose] == true then
+            options_new[:log_level] = Logger::DEBUG
+          else 
+            options_new[:log_level] = Logger::WARN
+          end
+          unless options_new[:file].nil?
+            config = load_config_file(options_new[:file])
+          end
+          
+          starter = Anas::Starter.new(options_new, config)
+          starter.restart
+        end
+      end
+
       command :build do |c|
         c.syntax = 'anas build [options]'
         c.summary = ''
