@@ -1,0 +1,13 @@
+version: "3.5"
+
+services:
+  mysql:
+    container_name: ${CONTAINER_PREFIX}redis
+    image: redis:6.2.1-alpine
+    restart: unless-stopped
+    environment:
+      - TZ
+networks:
+  default:
+    driver: bridge
+    name: redis

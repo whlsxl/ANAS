@@ -70,7 +70,7 @@ TLS证书是由CA（数字证书认证机构）颁发的，我们可以主动向
 
 ### command:
 
-* `--entrypoints.websecure.address=:443`: 在容器内导出https端口443，具体导出端口为下方`ports`中转出端口
+* `--entrypoints.https.address=:443`: 在容器内导出https端口443，具体导出端口为下方`ports`中转出端口
 * `--providers.docker=true`: 开启docker provider
 * `- --providers.docker.exposedbydefault=false`: 不主动导出`docker container`作为provider，只有标记"traefik.enable=true"的`container`导出
 * `--providers.docker.network=traefik`

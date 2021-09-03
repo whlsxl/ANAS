@@ -1,6 +1,6 @@
 #!/bin/sh
 
 echo "Run script"
-/etc/periodic/weekly/cert.sh
+/root/cert.sh
 echo "Run cron"
-crond -l 2 -f
+exec crond -l 2 -f

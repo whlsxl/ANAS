@@ -1,0 +1,18 @@
+version: "3.5"
+
+services:
+  mysql:
+    container_name: ${CONTAINER_PREFIX}mysql
+    image: ghcr.io/linuxserver/mariadb:alpine-version-10.5.9-r0
+    restart: unless-stopped
+    environment:
+      - PUID
+      - PGID
+      - MYSQL_ROOT_PASSWORD
+      - TZ
+    volumes:
+      - "${DATA_PATH}/mysql:/config"
+networks:
+  default:
+    driver: bridge
+    name: mysql

@@ -27,6 +27,10 @@ class ::Hash
     end
     Hash[h]
   end
+
+  def value_to_string!
+    self.each { |k, v| self[k] = v.to_s }
+  end
 end
 
 class String

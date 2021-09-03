@@ -10,8 +10,6 @@ Traefik
 无
 ### 需要的环境变量
 
-- `TREAFIK_BASE_PORT`: 定义了HTTP服务的对外端口
-  - 默认为`9000`
 - `LEGO_EMAIL`: 获取证书时，提交给Let's Encrypt的邮件，用于获取证书相关提醒
   - 如果为空，使用`core`的`Email`代替
 - `LEGO_DNS_PROVIDER`: DNS提供者，LEGO支持市面上大部分DNS供应商的API，[支持列表](https://go-acme.github.io/lego/dns/)

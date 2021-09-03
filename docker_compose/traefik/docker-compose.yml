@@ -2,10 +2,10 @@ version: "3.5"
 
 services:
   traefik:
-    image: "traefik:v2.1"
+    image: "traefik:v2.5.1"
     container_name: ${CONTAINER_PREFIX}traefik
     command:
-      - --entrypoints.websecure.address=:${TREAFIK_BASE_PORT}
+      - --entrypoints.https.address=:443
       - --providers.docker=true
       - --providers.docker.exposedbydefault=false
       - --providers.docker.network=traefik
@@ -13,33 +13,22 @@ services:
       - --providers.file.filename=/cert.yml
     restart: unless-stopped
     environment:
-      - TRAEFIK_LEGO_CERT_PATH
-      - TRAEFIK_LEGO_KEY_PATH
+      - LEGO_CERT_PATH
     ports:
-      - "${TREAFIK_BASE_PORT}"
+      - "${TREAFIK_BASE_PORT}:443"
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
-      - "${TRAEFIK_LEGO_CERTS_PATH}:/certs:ro"
+      - "${LEGO_CERTS_PATH}:/certs:ro"
       - "./cert.yml:/cert.yml:ro"
     labels:
-      - "traefik.http.routers.api.entrypoints=websecure"
+      - "traefik.http.routers.api.entrypoints=https"
       - "traefik.http.routers.api.rule=Host(`traefik.${BASE_URL}`)"
       - "traefik.http.routers.api.service=api@internal"
       - "traefik.http.routers.api.middlewares=auth"
       - "traefik.http.middlewares.auth.basicauth.users=${BASICAUTH_HTPASSWD}"
       - "traefik.http.routers.api.tls=true"
-      - "traefik.http.routers.api.tls.certresolver=cert"
       - "traefik.enable=true"
       - "traefik.docker.network=traefik"
-  lego:
-    build: ./lego
-    container_name: ${CONTAINER_PREFIX}lego
-    image: lego
-    restart: unless-stopped
-    volumes:
-      - "${TRAEFIK_LEGO_DATA_PATH}:/certs"
-    env_file:
-      - traefik.env
 
 networks:
   default:

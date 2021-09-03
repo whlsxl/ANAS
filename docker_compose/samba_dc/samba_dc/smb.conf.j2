@@ -10,6 +10,7 @@
 
 	add machine script = /usr/sbin/adduser -D -H -G users -s /bin/false %u
 	allow dns updates = ${SMABA_ALLOW_DNS_UPDATES}
+	dns forwarder = ${SMABA_DNS_FORWARDER}
 	bind interfaces only = ${SAMBA_BIND_INTERFACES_ONLY}
 	domain master = ${SAMBA_DOMAIN_MASTER}
 	interfaces = ${SAMBA_INTERFACES}
@@ -18,6 +19,6 @@
 	winbind use default domain = ${SAMBA_WINBIND_USE_DEFAULT_DOMAIN}
 	
 	tls enabled  = yes
-	tls keyfile  = /certs/${TRAEFIK_LEGO_KEY_NAME}
-	tls certfile = /certs/${TRAEFIK_LEGO_CERT_NAME}
-	tls cafile   = /certs/${TRAEFIK_LEGO_CA_CERT_NAME}
+	tls keyfile  = /certs/${LEGO_KEY_NAME}
+	tls certfile = /certs/${LEGO_CERT_NAME}
+	tls cafile   = /certs/${LEGO_CA_CERT_NAME}

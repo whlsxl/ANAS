@@ -25,6 +25,7 @@ Gem::Specification.new do |spec|
   spec.require_paths = ["lib", 'docker_compose']
 
   spec.add_dependency 'commander', '~> 4.5'
+  spec.add_dependency 'htauth', '~> 2.1'
 
   # spec.add_development_dependency "bundler", '~> 2.0'
   # spec.add_development_dependency "rake", '~> 0'

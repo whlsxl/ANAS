@@ -47,7 +47,7 @@ module Anas
       command :build do |c|
         c.syntax = 'anas build [options]'
         c.summary = ''
-        c.description = ''
+        c.description = 'Build all modules'
         c.example 'description', 'Build all modules'
         c.action do |args, options|
           options.default :build => false
@@ -66,7 +66,7 @@ module Anas
       command :stop do |c|
         c.syntax = 'anas stop [options]'
         c.summary = ''
-        c.description = ''
+        c.description = 'Stop modules'
         c.example 'description', 'Stop modules'
         c.option '-a', '--all', 'Stop all modules'
         c.action do |args, options|
@@ -76,7 +76,10 @@ module Anas
           else 
             options_new[:log_level] = Logger::WARN
           end
-          config = load_config_file(options_new[:file])
+          config = nil
+          unless options_new[:file].nil?
+            config = load_config_file(options_new[:file])
+          end
 
           starter = Anas::Starter.new(options_new, config)
           starter.stop

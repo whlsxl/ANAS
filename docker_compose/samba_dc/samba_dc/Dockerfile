@@ -1,8 +1,9 @@
-FROM alpine:3.13
+FROM alpine:3.14
 LABEL maintainer="Hailong"
 
 ENV SMABA_ALLOW_DNS_UPDATES=secure \
-  SAMBA_BIND_INTERFACES_ONLY=yes \
+  SMABA_DNS_FORWARDER= \
+  SAMBA_BIND_INTERFACES_ONLY=no \
   SAMBA_DOMAIN_ACTION=provision \
   SAMBA_DOMAIN_MASTER=auto \
   SAMBA_INTERFACES= \
@@ -15,7 +16,7 @@ ENV SMABA_ALLOW_DNS_UPDATES=secure \
   SAMBA_WINBIND_USE_DEFAULT_DOMAIN=yes \
   SAMBA_WORKGROUP=
 
-ARG SAMBA_VERSION=4.13.3-r1
+ARG SAMBA_VERSION=4.14.5-r0
 
 RUN apk add --update --no-cache ldb-tools samba-dc=$SAMBA_VERSION samba-winbind-clients \
   bind bind-libs bind-tools krb5 libcrypto1.1 libxml2 tzdata gettext

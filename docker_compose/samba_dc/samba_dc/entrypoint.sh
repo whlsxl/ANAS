@@ -22,6 +22,7 @@ if [ ! -f /var/lib/samba/registry.tdb ]; then
     INTERFACE_OPTS="--option=\"bind interfaces only=yes\" \
       --option=\"interfaces=$SAMBA_INTERFACES\""
   fi
+
   if [ $SAMBA_DOMAIN_ACTION == provision ]; then
     PROVISION_OPTS="--server-role=dc --use-rfc2307 --domain=$SAMBA_WORKGROUP \
     --realm=$SAMBA_REALM --adminpass='$SAMBA_ADMIN_PASSWORD'"

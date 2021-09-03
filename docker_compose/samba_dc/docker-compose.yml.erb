@@ -4,15 +4,17 @@ services:
   samba_dc:
     container_name: ${CONTAINER_PREFIX}samba_dc
     build: ./samba_dc
-    image: ${IMAGE_PREFIX}samba_dc
+    image: ${IMAGE_PREFIX}samba_dc:latest
     restart: unless-stopped
     network_mode: host
+    dns: <%= envs["HOST_IPS_ARRAY"] %>
+    dns_search: ${BASE_DOMAIN}
     cap_add:
       - SYS_ADMIN
     env_file:
       - samba_dc.env
     volumes:
-      - "${TRAEFIK_LEGO_CERTS_PATH}:/certs:ro"
+      - "${LEGO_CERTS_PATH}:/certs:ro"
       - "${DATA_PATH}/samba_dc/conf:/etc/samba"
       - "${DATA_PATH}/samba_dc/var:/var/lib/samba"
     ports:
