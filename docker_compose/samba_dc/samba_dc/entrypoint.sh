@@ -53,4 +53,7 @@ for file in $(ls -A /etc/samba/conf.d/*.conf); do
 done
 ln -fns /var/lib/samba/private/krb5.conf /etc/
 
+nohup sh -c "/usr/local/bin/structure.sh &"
+
 exec samba --model=$SAMBA_MODEL -i </dev/null
+

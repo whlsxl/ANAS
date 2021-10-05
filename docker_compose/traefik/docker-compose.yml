@@ -2,10 +2,11 @@ version: "3.5"
 
 services:
   traefik:
-    image: "traefik:v2.5.1"
+    image: ${IMAGE_PREFIX}traefik:latest
+    build: ./traefik
     container_name: ${CONTAINER_PREFIX}traefik
     command:
-      - --entrypoints.https.address=:443
+      - --entrypoints.https.address=:${TREAFIK_BASE_PORT}
       - --providers.docker=true
       - --providers.docker.exposedbydefault=false
       - --providers.docker.network=traefik
@@ -15,11 +16,10 @@ services:
     environment:
       - LEGO_CERT_PATH
     ports:
-      - "${TREAFIK_BASE_PORT}:443"
+      - "${TREAFIK_BASE_PORT}:${TREAFIK_BASE_PORT}"
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
       - "${LEGO_CERTS_PATH}:/certs:ro"
-      - "./cert.yml:/cert.yml:ro"
     labels:
       - "traefik.http.routers.api.entrypoints=https"
       - "traefik.http.routers.api.rule=Host(`traefik.${BASE_URL}`)"

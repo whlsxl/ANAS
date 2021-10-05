@@ -206,6 +206,10 @@ module Anas
       Log.info("Module stopped #{@mod_name}")
     end
 
+    def use_ldap?
+      return false
+    end
+
     def is_running?
       Dir.chdir(@working_path)
       ENV.update(@envs)

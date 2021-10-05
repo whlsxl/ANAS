@@ -58,10 +58,11 @@ module Anas
           else 
             options_new[:log_level] = Logger::WARN
           end
+          config = nil
           unless options_new[:file].nil?
             config = load_config_file(options_new[:file])
           end
-          
+
           starter = Anas::Starter.new(options_new, config)
           starter.restart
         end

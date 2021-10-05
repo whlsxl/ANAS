@@ -139,6 +139,20 @@ module Anas
       end
       @all_dependent_nodes.delete mod_name
     end
+
+    def all_mods_name
+      return @all_dependent_nodes.keys.join(',')
+    end
+
+    def ldap_mods_name
+      mods_name =[]
+      @all_dependent_nodes.each do |key, mod|
+        if mod.runner.use_ldap?
+          mods_name.append key
+        end
+      end
+      return mods_name
+    end
   end
 
   class Starter
@@ -302,6 +316,9 @@ module Anas
     end
 
     def process_envs()
+      dependent_tree = DependentTree.new(@mods)
+      @config_envs["ALL_MODS_NAME"] = dependent_tree.all_mods_name
+      @config_envs["USE_LDAP_MODS_NAME"] = dependent_tree.ldap_mods_name.join ','
       envs = cal_envs(@mods, @config_envs)
       Log.debug("Calculate envs is \n #{envs}")
       missing_envs = check_envs(@mods, envs)

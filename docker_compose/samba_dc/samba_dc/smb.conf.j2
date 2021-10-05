@@ -6,17 +6,17 @@
 	realm = ${SAMBA_REALM}
 	server role = active directory domain controller
 	workgroup = ${SAMBA_WORKGROUP}
-	idmap_ldb:use rfc2307 = yes
 
-	add machine script = /usr/sbin/adduser -D -H -G users -s /bin/false %u
 	allow dns updates = ${SMABA_ALLOW_DNS_UPDATES}
 	dns forwarder = ${SMABA_DNS_FORWARDER}
 	bind interfaces only = ${SAMBA_BIND_INTERFACES_ONLY}
 	domain master = ${SAMBA_DOMAIN_MASTER}
 	interfaces = ${SAMBA_INTERFACES}
 	log level = ${SAMBA_LOG_LEVEL}
-	winbind refresh tickets = Yes
-	winbind use default domain = ${SAMBA_WINBIND_USE_DEFAULT_DOMAIN}
+	log file = /var/log/samba/%m.log
+
+	template shell = ${SAMBA_TEMPLATE_SHELL}
+	template homedir = ${SAMBA_TEMPLATE_HOMEDIR}
 	
 	tls enabled  = yes
 	tls keyfile  = /certs/${LEGO_KEY_NAME}
