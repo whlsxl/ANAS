@@ -31,7 +31,16 @@ module Anas
       domain = new_envs['SAMBA_DOMAIN']
       new_envs['SAMBA_WORKGROUP'] = domain.split('.').first unless envs.has_key?('SAMBA_WORKGROUP')
       new_envs['SAMBA_BASE_DN'] = 'DC=' + domain.split('.').join(',DC=')
+      new_envs['SAMBA_BASE_GROUPS_DN'] = "OU=Role,OU=Groups,#{new_envs['SAMBA_BASE_DN']}"
+      new_envs['SAMBA_BASE_USERS_DN'] = "OU=People,#{new_envs['SAMBA_BASE_DN']}"
+      new_envs['SAMBA_BASE_APP_DN'] = "OU=Apps,OU=Groups,#{new_envs['SAMBA_BASE_DN']}"
       new_envs['SAMBA_ADMIN_DN'] = "CN=#{envs['SMABA_ADMIN_NAME']},CN=Users,#{new_envs['SAMBA_BASE_DN']}"
+      new_envs['SAMBA_GROUP_CLASS_FILTER'] = "(objectclass=group)"
+      new_envs['SAMBA_USER_CLASS_FILTER'] = "(objectclass=person)"
+      new_envs['SAMBA_USER_ENABLED_FILTER'] = "(!(userAccountControl:1.2.840.113556.1.4.803:=2))"
+      new_envs['SAMBA_USER_LOGIN_ATTRS'] = 'sAMAccountName,userPrincipalName,mail' unless envs.has_key?('SAMBA_USER_LOGIN_ATTRS')
+      new_envs['SAMBA_USER_DISPLAY_NAME'] = 'displayName'
+      new_envs['SAMBA_GROUP_DISPLAY_NAME'] = 'name'
       return new_envs
     end
   end

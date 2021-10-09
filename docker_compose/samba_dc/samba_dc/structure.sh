@@ -47,12 +47,12 @@ fi
 # deal with Administrator
 if [ ! -z "$SMABA_ADMIN_NAME" ]; then
   echo "Deal with Administrator"
-  samaccountname=$( get_attribute_dn 'description=Built-in account for administering the computer/domain' sAMAccountName )
-  if [ $samaccountname == $SMABA_ADMIN_NAME ]; then
+  sAMAccountName=$( get_attribute_dn 'description=Built-in account for administering the computer/domain' sAMAccountName )
+  if [ $sAMAccountName == $SMABA_ADMIN_NAME ]; then
     echo "Administrator name already: $SMABA_ADMIN_NAME "
   else
-    echo "Administrator rename $samaccountname => $SMABA_ADMIN_NAME"
-    echo $( samba-tool user rename $samaccountname --samaccountname=$SMABA_ADMIN_NAME )
+    echo "Administrator rename $sAMAccountName => $SMABA_ADMIN_NAME"
+    echo $(samba-tool user rename $sAMAccountName --samaccountname=$SMABA_ADMIN_NAME)
   fi
 fi
 
@@ -62,6 +62,7 @@ if [ $SAMBA_CREATE_STRUCTURE == "true" ]; then
   create_ou "OU=Groups" $SAMBA_BASE_DN "Groups"
   create_ou "OU=People" $SAMBA_BASE_DN "People"
   create_ou "OU=Servers" $SAMBA_BASE_DN "Servers"
+  create_ou "OU=Graveyard" $SAMBA_BASE_DN "Graveyard"
   # craete ou in groups
   create_ou "OU=Role" "OU=Groups,$SAMBA_BASE_DN" "Role"
   create_ou "OU=Access" "OU=Groups,$SAMBA_BASE_DN" "Access"
