@@ -6,7 +6,7 @@ services:
     container_name: ${CONTAINER_PREFIX}adminer
     restart: unless-stopped
     environment:
-      - "ADMINER_DEFAULT_DB_HOST=${MYSQL_HOST}"
+      - "ADMINER_DEFAULT_SERVER=${MYSQL_HOST}"
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.adminer.entrypoints=https"

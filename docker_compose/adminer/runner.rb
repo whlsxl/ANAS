@@ -4,8 +4,10 @@ module Anas
     def initialize()
       super
       @required_envs = []
-      @optional_envs = ['ADMINER_DOMAIN_PREFIX']
-      @default_envs = {'ADMINER_DOMAIN_PREFIX' => 'adminer'}
+      @optional_envs = ['ADMINER_DOMAIN_PREFIX', 'ADMINER_DESIGN']
+      @default_envs = {
+        'ADMINER_DOMAIN_PREFIX' => 'adminer', 'ADMINER_DESIGN' => 'nette'
+      }
       @dependent_mods = ['mysql', 'traefik']
     end
 
