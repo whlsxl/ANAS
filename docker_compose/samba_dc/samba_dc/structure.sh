@@ -76,3 +76,23 @@ if [ $SAMBA_CREATE_STRUCTURE == "true" ]; then
   create_ou "OU=Computer" "OU=Groups,$SAMBA_BASE_DN" "Computer"
 fi
 
+# samba password rule
+echo "Apply default user password rule"
+samba-tool domain passwordsettings set --min-pwd-age=0
+samba-tool domain passwordsettings set --max-pwd-age=$SAMBA_USER_MAX_PASS_AGE
+samba-tool domain passwordsettings set --min-pwd-length=$SAMBA_USER_MIN_PASS_LENGTH
+samba-tool domain passwordsettings set --history-length=0
+if [ $SAMBA_USER_COMPLEX_PASS == "true" ]; then
+  samba-tool domain passwordsettings set --complexity=on
+else
+  samba-tool domain passwordsettings set --complexity=off
+fi
+
+# samba administrator password rule
+echo $(samba-tool domain passwordsettings pso create "pso_administrator" 1 --min-pwd-length=7  --complexity=on \
+              --history-length=0 --min-pwd-age=0 --max-pwd-age=0) 
+admin_pso="$(samba-tool domain passwordsettings pso show-user $SMABA_ADMIN_NAME)"
+if [[ "$admin_pso" != *"pso_administrator"* ]]; then
+  echo "Apply administrator user password rule"  
+  echo $(samba-tool domain passwordsettings pso apply "pso_administrator" $SMABA_ADMIN_NAME)
+fi
