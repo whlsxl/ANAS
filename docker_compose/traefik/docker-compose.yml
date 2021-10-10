@@ -4,7 +4,7 @@ services:
   traefik:
     image: ${IMAGE_PREFIX}traefik:latest
     build: ./traefik
-    container_name: ${CONTAINER_PREFIX}traefik
+    container_name: ${NEXTCLOUD_CONTAINER_NAME}
     command:
       - --entrypoints.https.address=:${TREAFIK_BASE_PORT}
       - --providers.docker=true

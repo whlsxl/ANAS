@@ -36,6 +36,7 @@ services:
       - "DB_NAME=${NEXTCLOUD_DB_NAME}"
       - "DB_USER=root"
       - "DB_PASSWORD=${MYSQL_ROOT_PASSWORD}"
+      - "REAL_IP_FROM=${NEXTCLOUD_CONTAINER_NAME}"
     restart: unless-stopped
     networks:
       - mysql

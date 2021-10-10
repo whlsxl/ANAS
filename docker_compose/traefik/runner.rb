@@ -10,6 +10,7 @@ module Anas
 
     def cal_envs(envs)
       new_envs = envs
+      new_envs['NEXTCLOUD_CONTAINER_NAME'] = "#{envs['CONTAINER_PREFIX']}traefik"
       return new_envs
     end
 
