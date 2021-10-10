@@ -14,9 +14,9 @@ module Anas
       new_envs['LEGO_EMAIL'] = envs['EMAIL'] unless envs.has_key?('LEGO_EMAIL')
       new_envs['LEGO_DATA_PATH'] = "#{envs['DATA_PATH']}/lego/certs" unless envs.has_key?('LEGO_DATA_PATH')
       new_envs['LEGO_CERTS_PATH'] = "#{envs['LEGO_DATA_PATH']}/certificates/"
-      new_envs['LEGO_CERT_NAME'] = "#{envs['BASE_DOMAIN']}.crt"
-      new_envs['LEGO_KEY_NAME'] = "#{envs['BASE_DOMAIN']}.key"
-      new_envs['LEGO_CA_CERT_NAME'] = "#{envs['BASE_DOMAIN']}.issuer.crt"
+      new_envs['LEGO_CERT_NAME'] = "#{envs['BASE_DOMAIN_NAME']}.crt"
+      new_envs['LEGO_KEY_NAME'] = "#{envs['BASE_DOMAIN_NAME']}.key"
+      new_envs['LEGO_CA_CERT_NAME'] = "#{envs['BASE_DOMAIN_NAME']}.issuer.crt"
       return new_envs
     end
 

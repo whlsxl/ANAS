@@ -12,4 +12,4 @@ Core
 
 - `DATA_PATH`: 所有服务产生数据存储的位置，
   - 默认为`~/data`
-- `BASE_DOMAIN`: 所有服务的根URL，可以为二级域名
+- `BASE_DOMAIN_NAME`: 所有服务的根URL，可以为二级域名

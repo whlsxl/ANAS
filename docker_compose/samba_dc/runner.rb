@@ -23,16 +23,16 @@ module Anas
 
     def cal_envs(envs)
       new_envs = envs
-      new_envs['SAMBA_DOMAIN'] = envs['BASE_DOMAIN']
-      new_envs['SAMBA_REALM'] = envs['BASE_DOMAIN'].to_s.upcase unless envs.has_key?('SAMBA_REALM')
+      new_envs['SAMBA_DOMAIN_NAME'] = envs['BASE_DOMAIN_NAME']
+      new_envs['SAMBA_REALM'] = envs['BASE_DOMAIN_NAME'].to_s.upcase unless envs.has_key?('SAMBA_REALM')
       new_envs['SAMBA_ADMIN_PASSWORD'] = envs['DEFAULT_ROOT_PASSWORD'] unless envs.has_key?('SAMBA_ADMIN_PASSWORD')
       unless envs.has_key?('SMABA_DNS_FORWARDER') 
         currentDNS = Resolv::DNS::Config.default_config_hash[:nameserver]
         new_envs['SMABA_DNS_FORWARDER'] = currentDNS.join(' ')
       end
-      new_envs['SAMBA_SERVER_URL'] = "ldaps://#{envs['BASE_DOMAIN']}" unless envs.has_key?('SAMBA_SERVER_FULL_URL')
+      new_envs['SAMBA_SERVER_URL'] = "ldaps://#{envs['BASE_DOMAIN_NAME']}" unless envs.has_key?('SAMBA_SERVER_FULL_URL')
       new_envs['SAMBA_PORT'] = "636"
-      domain = new_envs['SAMBA_DOMAIN']
+      domain = new_envs['SAMBA_DOMAIN_NAME']
       new_envs['SAMBA_WORKGROUP'] = domain.split('.').first unless envs.has_key?('SAMBA_WORKGROUP')
       new_envs['SAMBA_BASE_DN'] = 'DC=' + domain.split('.').join(',DC=')
       new_envs['SAMBA_BASE_GROUPS_DN'] = "OU=Role,OU=Groups,#{new_envs['SAMBA_BASE_DN']}"

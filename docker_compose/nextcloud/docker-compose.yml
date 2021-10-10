@@ -10,7 +10,7 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.nextcloud.entrypoints=https"
-      - "traefik.http.routers.nextcloud.rule=Host(`${NEXTCLOUD_DOMAIN}`)"
+      - "traefik.http.routers.nextcloud.rule=Host(`${NEXTCLOUD_DOMAIN_NAME}`)"
       - "traefik.http.routers.nextcloud.middlewares=nextcloud-dav,nextcloud-webfinger,nextcloud-regex,nextcloud-header"
       - "traefik.http.routers.nextcloud.tls=true"
       - "traefik.http.services.nextcloud.loadbalancer.server.port=8000"

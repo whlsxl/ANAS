@@ -4,7 +4,7 @@ module Anas
   class CoreRunner < BaseRunner
     def initialize()
       super
-      @required_envs = ['BASE_DOMAIN', 'EMAIL']
+      @required_envs = ['BASE_DOMAIN_NAME', 'EMAIL']
       @optional_envs = ['DATA_PATH', 'TZ', 'DEFAULT_ROOT_PASSWORD', 'CONTAINER_PREFIX',
         'IMAGE_PREFIX', 'DEFAULT_SERVICE_ROOT_PASSWORD', 'PUID', 'PGID',
         'BASICAUTH_USER', 'BASICAUTH_PASSWD', 'DEFAULT_LANGUAGE'
