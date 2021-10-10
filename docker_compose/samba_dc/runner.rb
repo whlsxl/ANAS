@@ -8,11 +8,12 @@ module Anas
       @optional_envs = ['SAMBA_REALM', 'SAMBA_WORKGROUP','SAMBA_ADMIN_PASSWORD', 
         'SAMBA_SERVER_STRING', 'SAMBA_NETBIOS_NAME', 'SAMBA_INTERFACES',
         'SMABA_DNS_FORWARDER', 'SMABA_APP_FILTER', 'SAMBA_CREATE_STRUCTURE',
-        'SMABA_ADMIN_NAME', 'SAMBA_TEMPLATE_SHELL', 'SAMBA_TEMPLATE_HOMEDIR'
+        'SMABA_ADMIN_NAME', 'SAMBA_TEMPLATE_SHELL', 'SAMBA_TEMPLATE_HOMEDIR',
+        'SMABA_DOMAIN_USERS_GID_NUMBER'
       ]
       @default_envs = {'SMABA_APP_FILTER' => 'false', 'SAMBA_CREATE_STRUCTURE' => 'true',
         'SMABA_ADMIN_NAME' => 'Administrator', 'SAMBA_TEMPLATE_SHELL' => '/bin/false',
-        'SAMBA_TEMPLATE_HOMEDIR' => '/home/%D/%U'
+        'SAMBA_TEMPLATE_HOMEDIR' => '/home/%D/%U', 'SMABA_DOMAIN_USERS_GID_NUMBER' => 10000
       }
       @dependent_mods = ['lego']
     end

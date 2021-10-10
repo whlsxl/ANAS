@@ -32,6 +32,13 @@ create_group() { # $1 group name, $2 base dn $3 description
 }
 
 sleep 20
+
+# set `Domain Users` group gidNumber
+du=$( get_attribute_dn "CN=Domain Users" gidNumber )
+if dn_exist "CN=Domain Users"; then
+  samba-tool group addunixattrs 'Domain Users' $SMABA_DOMAIN_USERS_GID_NUMBER
+fi
+
 # app filter by group
 if [ $SMABA_APP_FILTER == "true" ]; then
   echo "Create app filter ou & group"
