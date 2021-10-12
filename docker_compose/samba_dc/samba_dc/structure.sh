@@ -100,3 +100,6 @@ if [[ "$admin_pso" != *"pso_administrator"* ]]; then
   echo "Apply administrator user password rule"  
   echo $(samba-tool domain passwordsettings pso apply "pso_administrator" $SMABA_ADMIN_NAME)
 fi
+
+# change dsheuristics to allow user modify password
+samba-tool forest directory_service dsheuristics 000000001
