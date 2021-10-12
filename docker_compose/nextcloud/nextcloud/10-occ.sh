@@ -77,4 +77,18 @@ $LDAP_CMD ldapAgentPassword "$SAMBA_ADMIN_PASSWORD"
 
 occ ldap:test-config $LDAP_CONFIG_NAME
 
+# password policy
+if [ "$NEXTCLOUD_USER_COMPLEX_PASS" == 'true' ]; then
+  occ config:app:set password_policy enforceNumericCharacters --value=1
+  occ config:app:set password_policy enforceSpecialCharacters --value=0
+  occ config:app:set password_policy enforceUpperLowerCase --value=1
+else
+  occ config:app:set password_policy enforceNumericCharacters --value=0
+  occ config:app:set password_policy enforceSpecialCharacters --value=0
+  occ config:app:set password_policy enforceUpperLowerCase --value=0
+fi
+
+occ config:app:set password_policy expiration --value=$NEXTCLOUD_USER_MAX_PASS_AGE
+occ config:app:set password_policy minLength --value=$NEXTCLOUD_USER_MIN_PASS_LENGTH
+
 declare -p LDAP_CONFIG_NAME > "$conf"
