@@ -57,11 +57,11 @@ activeTypes: user,group,host
 
 types: suffix_user: <%= "#{envs["SAMBA_BASE_USERS_DN"]}" %>
 types: attr_user: #cn;#displayName;#sAMAccountName;#name;#userPrincipalName;#givenName;#sn;#mail
-types: modules_user: windowsUser, posixAccount
+types: modules_user: windowsUser
 
 types: suffix_group: <%= "#{envs["SAMBA_BASE_GROUPS_DN"]}" %>
 types: attr_group: #cn;#name;#member;#description;#gidNumber
-types: modules_group: windowsGroup, posixGroup
+types: modules_group: windowsGroup
 
 types: suffix_host: <%= "#{envs["SAMBA_BASE_COMPUTERS_DN"]}" %>
 types: attr_host: #cn;#description;#location
@@ -190,7 +190,7 @@ modules: posixAccount_shells: /bin/bash+::+/bin/csh+::+/bin/dash+::+/bin/false+:
 modules: posixAccount_user_hidegecos: false
 modules: posixAccount_primaryGroupAsSecondary: false
 modules: posixAccount_user_userNameSuggestion: @givenname@%sn%
-modules: windowsUser_domains: my-domain.com
+modules: windowsUser_domains: <%= "#{envs["SAMBA_DOMAIN_NAME"]}" %>
 modules: windowsUser_hidesAMAccountName: false
 tools: tool_hide_toolMultiEdit: false
 
