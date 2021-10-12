@@ -6,7 +6,6 @@ services:
     image: ${IMAGE_PREFIX}phpldapadmin:latest
     container_name: ${CONTAINER_PREFIX}phpldapadmin
     restart: unless-stopped
-    command: "--loglevel debug"
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.phpldapadmin.entrypoints=https"
