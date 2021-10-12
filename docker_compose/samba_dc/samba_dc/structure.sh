@@ -6,6 +6,10 @@ get_attribute_dn() { # $1 filter, $2 attritube name
   echo $( $LDBSEARCH_CMD_PREFIX "$1" $2 | grep $2 | sed -nr "s/$2: ([\w|,|=]*)/\1/p" )
 }
 
+get_group_attr() { # $1 group cn name, $2 attritube name
+  echo $( samba-tool group show "$1" | grep $2 | sed -nr "s/$2: ([\w|,|=]*)/\1/p" )
+}
+
 dn_exist() { # $1 dn path 
   search_dn=$( get_attribute_dn "distinguishedName=$1" dn )
   [ "$search_dn" == "$1" ]
@@ -34,9 +38,9 @@ create_group() { # $1 group name, $2 base dn $3 description
 sleep 20
 
 # set `Domain Users` group gidNumber
-du=$( get_attribute_dn "CN=Domain Users" gidNumber )
-if dn_exist "CN=Domain Users"; then
-  samba-tool group addunixattrs 'Domain Users' $SMABA_DOMAIN_USERS_GID_NUMBER
+if [ -z get_group_attr "Domain Users" gidNumber]; then
+  echo "Set 'Domain Users' gidNumber: $SMABA_DOMAIN_USERS_GID_NUMBER"
+  echo  $(samba-tool group addunixattrs 'Domain Users' $SMABA_DOMAIN_USERS_GID_NUMBER)
 fi
 
 # app filter by group
