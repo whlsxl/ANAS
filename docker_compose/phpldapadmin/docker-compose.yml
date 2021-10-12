@@ -1,0 +1,23 @@
+version: "3.5"
+
+services:
+  phpldapadmin:
+    build: ./phpldapadmin
+    image: ${IMAGE_PREFIX}phpldapadmin:latest
+    container_name: ${CONTAINER_PREFIX}phpldapadmin
+    restart: unless-stopped
+    command: "--loglevel debug"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.phpldapadmin.entrypoints=https"
+      - "traefik.http.routers.phpldapadmin.rule=Host(`${PHPLDAPADMIN_DOMAIN_NAME}`)"
+      - "traefik.http.routers.phpldapadmin.tls=true"
+      - "traefik.http.services.phpldapadmin.loadbalancer.server.port=80"
+    networks:
+      - traefik
+    env_file:
+      - phpldapadmin.env
+networks:
+  traefik:
+    external:
+      name: traefik
