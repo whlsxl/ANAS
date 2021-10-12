@@ -2,7 +2,7 @@ PHPLDAPADMIN_LDAP_HOSTS:
   - <%= envs["SAMBA_WORKGROUP"] %>:
     - server:
       - port: 0
-      - host: <%= "#{envs["SAMBA_SERVER_URL"]}:#{envs["SAMBA_PORT"]}" %>
+      - host: <%= "#{envs["SAMBA_SERVER_URL_PORT"]}:#{envs["SAMBA_PORT"]}" %>
       - base: 
         - <%= envs["SAMBA_BASE_DN"] %>
       - force_may: array('uidNumber','gidNumber','sambaSID')

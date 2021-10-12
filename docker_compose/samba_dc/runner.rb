@@ -32,6 +32,7 @@ module Anas
       end
       new_envs['SAMBA_SERVER_URL'] = "ldaps://#{envs['BASE_DOMAIN_NAME']}" unless envs.has_key?('SAMBA_SERVER_FULL_URL')
       new_envs['SAMBA_PORT'] = "636"
+      new_envs['SAMBA_SERVER_URL_PORT'] = "#{envs['SAMBA_SERVER_URL']}:#{envs['SAMBA_PORT']}"
       domain = new_envs['SAMBA_DOMAIN_NAME']
       new_envs['SAMBA_WORKGROUP'] = domain.split('.').first unless envs.has_key?('SAMBA_WORKGROUP')
       new_envs['SAMBA_BASE_DN'] = 'DC=' + domain.split('.').join(',DC=')
