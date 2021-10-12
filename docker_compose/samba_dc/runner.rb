@@ -36,6 +36,7 @@ module Anas
       domain = new_envs['SAMBA_DOMAIN_NAME']
       new_envs['SAMBA_WORKGROUP'] = domain.split('.').first unless envs.has_key?('SAMBA_WORKGROUP')
       new_envs['SAMBA_BASE_DN'] = 'DC=' + domain.split('.').join(',DC=')
+      new_envs['SAMBA_BASE_COMPUTERS_DN'] = "CN=Computers,#{new_envs['SAMBA_BASE_DN']}"
       new_envs['SAMBA_BASE_GROUPS_DN'] = "OU=Role,OU=Groups,#{new_envs['SAMBA_BASE_DN']}"
       new_envs['SAMBA_BASE_USERS_DN'] = "OU=People,#{new_envs['SAMBA_BASE_DN']}"
       new_envs['SAMBA_BASE_APP_DN'] = "OU=Apps,OU=Groups,#{new_envs['SAMBA_BASE_DN']}"

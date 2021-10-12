@@ -2,7 +2,8 @@ version: "3.5"
 
 services:
   lam:
-    image: ldapaccountmanager/lam:7.5
+    build: ./lam
+    image: ${IMAGE_PREFIX}lam:latest
     container_name: ${CONTAINER_PREFIX}lam
     restart: unless-stopped
     labels:
@@ -12,16 +13,12 @@ services:
       - "traefik.http.routers.lam.tls=true"
       - "traefik.http.services.lam.loadbalancer.server.port=80"
     environment:
-      - "LAM_SKIP_PRECONFIGURE=false"
-      - "LDAP_SERVER=${SAMBA_SERVER_URL}"
-      - "LDAP_DOMAIN=${SAMBA_DOMAIN}"
-      - "LDAP_BASE_DN=${SAMBA_BASE_DN}"
-      - "LDAP_USER=${SAMBA_ADMIN_DN}"
-      - "LDAP_ADMIN_PASSWORD=${SAMBA_ADMIN_PASSWORD}"
-      - "LAM_PASSWORD=${LAM_ADMIN_PASSWORD}"
+      - "LAM_SKIP_PRECONFIGURE=true"
       - "DEBUG=true"
     networks:
       - traefik
+    env_file:
+      - lam.env
 
 networks:
   traefik:
