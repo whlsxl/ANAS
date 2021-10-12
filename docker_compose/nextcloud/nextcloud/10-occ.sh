@@ -91,4 +91,8 @@ fi
 occ config:app:set password_policy expiration --value=$NEXTCLOUD_USER_MAX_PASS_AGE
 occ config:app:set password_policy minLength --value=$NEXTCLOUD_USER_MIN_PASS_LENGTH
 
+if [ "$NEXTCLOUD_RM_AUTOGEN_FILES" == "true" ]; then 
+  rm -rf /var/www/core/skeleton/*
+fi
+
 declare -p LDAP_CONFIG_NAME > "$conf"

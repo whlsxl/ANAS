@@ -9,7 +9,7 @@ module Anas
         'NEXTCLOUD_DOMAIN_NAME_PREFIX', 'NEXTCLOUD_DB_NAME', 'NEXTCLOUD_PHONE_REGION',
         'NEXTCLOUD_ADMIN_USERNAME', 'NEXTCLOUD_ADMIN_PASSWORD', 'NEXTCLOUD_USER_FILTER',
         'NEXTCLOUD_DEFAULT_QUOTA', 'NEXTCLOUD_PATH', 'NEXTCLOUD_USER_MIN_PASS_LENGTH',
-        'NEXTCLOUD_USER_COMPLEX_PASS', 'NEXTCLOUD_USER_MAX_PASS_AGE'
+        'NEXTCLOUD_USER_COMPLEX_PASS', 'NEXTCLOUD_USER_MAX_PASS_AGE', 'NEXTCLOUD_RM_AUTOGEN_FILES',
       ]
       @default_envs = {
         'NEXTCLOUD_DOMAIN_NAME_PREFIX' => 'nc', 'NEXTCLOUD_DB_NAME' => 'nextcloud',
@@ -18,6 +18,7 @@ module Anas
         'REAL_IP_HEADER' => 'X-Forwarded-For', 'LOG_IP_VAR' => 'http_x_forwarded_for',
         'HSTS_HEADER' => 'max-age=15768000; includeSubDomains', 'RP_HEADER' => 'strict-origin', 'SUBDIR' => '',
         'NEXTCLOUD_PHONE_REGION' => 'CN', 'NEXTCLOUD_ADMIN_USERNAME' => 'admin',
+        'NEXTCLOUD_RM_AUTOGEN_FILES' => true,
       }
       @dependent_mods = ['mysql', 'redis', 'traefik']
     end
