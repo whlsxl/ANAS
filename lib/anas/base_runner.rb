@@ -210,6 +210,14 @@ module Anas
       return false
     end
 
+    def run_after_mods(envs)
+      return []
+    end
+
+    def run_before_mods(envs)
+      return []
+    end
+
     def is_running?
       Dir.chdir(@working_path)
       ENV.update(@envs)
