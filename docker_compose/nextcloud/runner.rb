@@ -29,37 +29,37 @@ module Anas
       new_envs['NEXTCLOUD_DOMAIN_NAME'] = "#{envs['NEXTCLOUD_DOMAIN_NAME_PREFIX']}.#{envs['BASE_DOMAIN_NAME']}"
       new_envs['NEXTCLOUD_ADMIN_PASSWORD'] = envs['DEFAULT_ROOT_PASSWORD'] unless envs.has_key?('NEXTCLOUD_ADMIN_PASSWORD')
       unless envs['NEXTCLOUD_USER_FILTER']
-        if envs['SMABA_APP_FILTER'] == 'true'
-          new_envs['NEXTCLOUD_USER_FILTER'] = "(&#{envs['SAMBA_USER_CLASS_FILTER']}(memberOf=CN=APP_nextcloud,#{envs['SAMBA_BASE_APP_DN']}))"
+        if envs['SAMBA_DC_APP_FILTER'] == 'true'
+          new_envs['NEXTCLOUD_USER_FILTER'] = "(&#{envs['SAMBA_DC_USER_CLASS_FILTER']}(memberOf=CN=APP_nextcloud,#{envs['SAMBA_DC_BASE_APP_DN']}))"
         else
-          new_envs['NEXTCLOUD_USER_FILTER'] = envs['SAMBA_USER_CLASS_FILTER']
+          new_envs['NEXTCLOUD_USER_FILTER'] = envs['SAMBA_DC_USER_CLASS_FILTER']
         end
       end
       unless envs['NEXTCLOUD_USER_LOGIN_FILTER']
-        attrs = envs['SAMBA_USER_LOGIN_ATTRS'].split(',').append('objectGUID')
+        attrs = envs['SAMBA_DC_USER_LOGIN_ATTRS'].split(',').append('objectGUID')
         uid_filter = "(|#{(attrs.map { |attr| "(#{attr}=%uid)"}).join})"
-        new_envs['NEXTCLOUD_USER_LOGIN_FILTER'] = "(&#{new_envs['NEXTCLOUD_USER_FILTER']}#{envs['SAMBA_USER_ENABLED_FILTER']}#{uid_filter})"
+        new_envs['NEXTCLOUD_USER_LOGIN_FILTER'] = "(&#{new_envs['NEXTCLOUD_USER_FILTER']}#{envs['SAMBA_DC_USER_ENABLED_FILTER']}#{uid_filter})"
       end
 
       unless envs['NEXTCLOUD_USER_COMPLEX_PASS']
-        if envs['SAMBA_USER_COMPLEX_PASS']
-          new_envs['NEXTCLOUD_USER_COMPLEX_PASS'] = envs['SAMBA_USER_COMPLEX_PASS']
+        if envs['SAMBA_DC_USER_COMPLEX_PASS']
+          new_envs['NEXTCLOUD_USER_COMPLEX_PASS'] = envs['SAMBA_DC_USER_COMPLEX_PASS']
         else
           new_envs['NEXTCLOUD_USER_COMPLEX_PASS'] = true
         end
       end
 
       unless envs['NEXTCLOUD_USER_MAX_PASS_AGE']
-        if envs['SAMBA_USER_MAX_PASS_AGE']
-          new_envs['NEXTCLOUD_USER_MAX_PASS_AGE'] = envs['SAMBA_USER_MAX_PASS_AGE']
+        if envs['SAMBA_DC_USER_MAX_PASS_AGE']
+          new_envs['NEXTCLOUD_USER_MAX_PASS_AGE'] = envs['SAMBA_DC_USER_MAX_PASS_AGE']
         else
           new_envs['NEXTCLOUD_USER_MAX_PASS_AGE'] = 70
         end
       end
 
       unless envs['NEXTCLOUD_USER_MIN_PASS_LENGTH']
-        if envs['SAMBA_USER_MAX_PASS_LENGTH']
-          new_envs['NEXTCLOUD_USER_MIN_PASS_LENGTH'] = envs['SAMBA_USER_MAX_PASS_LENGTH']
+        if envs['SAMBA_DC_USER_MAX_PASS_LENGTH']
+          new_envs['NEXTCLOUD_USER_MIN_PASS_LENGTH'] = envs['SAMBA_DC_USER_MAX_PASS_LENGTH']
         else
           new_envs['NEXTCLOUD_USER_MIN_PASS_LENGTH'] = 7
         end

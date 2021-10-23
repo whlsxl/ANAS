@@ -49,19 +49,19 @@ fi
 
 LDAP_CMD="occ ldap:set-config $LDAP_CONFIG_NAME"
 
-$LDAP_CMD ldapHost "$SAMBA_SERVER_URL"
-$LDAP_CMD ldapPort "$SAMBA_PORT"
+$LDAP_CMD ldapHost "$SAMBA_DC_SERVER_URL"
+$LDAP_CMD ldapPort "$SAMBA_DC_PORT"
 
-$LDAP_CMD ldapBase "$SAMBA_BASE_DN"
-$LDAP_CMD ldapBaseGroups "$SAMBA_BASE_GROUPS_DN"
-$LDAP_CMD ldapBaseUsers "$SAMBA_BASE_USERS_DN"
+$LDAP_CMD ldapBase "$SAMBA_DC_BASE_DN"
+$LDAP_CMD ldapBaseGroups "$SAMBA_DC_BASE_GROUPS_DN"
+$LDAP_CMD ldapBaseUsers "$SAMBA_DC_BASE_USERS_DN"
 
 $LDAP_CMD ldapUserFilter "$NEXTCLOUD_USER_FILTER"
 $LDAP_CMD ldapLoginFilter "$NEXTCLOUD_USER_LOGIN_FILTER"
-$LDAP_CMD ldapGroupFilter "$SAMBA_GROUP_CLASS_FILTER"
+$LDAP_CMD ldapGroupFilter "$SAMBA_DC_GROUP_CLASS_FILTER"
 
-$LDAP_CMD ldapUserDisplayName "$SAMBA_USER_DISPLAY_NAME"
-$LDAP_CMD ldapGroupDisplayName "$SAMBA_GROUP_DISPLAY_NAME"
+$LDAP_CMD ldapUserDisplayName "$SAMBA_DC_USER_DISPLAY_NAME"
+$LDAP_CMD ldapGroupDisplayName "$SAMBA_DC_GROUP_DISPLAY_NAME"
 if [ ! -z "$NEXTCLOUD_DEFAULT_QUOTA"]; then
   $LDAP_CMD ldapQuotaDefault "$NEXTCLOUD_DEFAULT_QUOTA"
 fi
@@ -72,8 +72,8 @@ $LDAP_CMD ldapExpertUUIDUserAttr sAMAccountName
 $LDAP_CMD ldapExpertUUIDGroupAttr cn
 # $LDAP_CMD ldapDefaultPPolicyDN
 
-$LDAP_CMD ldapAgentName "$SAMBA_ADMIN_DN"
-$LDAP_CMD ldapAgentPassword "$SAMBA_ADMIN_PASSWORD"
+$LDAP_CMD ldapAgentName "$SAMBA_DC_ADMIN_DN"
+$LDAP_CMD ldapAgentPassword "$SAMBA_DC_ADMIN_PASSWORD"
 
 occ ldap:test-config $LDAP_CONFIG_NAME
 

@@ -1,14 +1,14 @@
 PHPLDAPADMIN_LDAP_HOSTS:
-  - <%= envs["SAMBA_WORKGROUP"] %>:
+  - <%= envs["SAMBA_DC_WORKGROUP"] %>:
     - server:
       - port: 0
-      - host: <%= "#{envs["SAMBA_SERVER_URL_PORT"]}" %>
+      - host: <%= "#{envs["SAMBA_DC_SERVER_URL_PORT"]}" %>
       - base: 
-        - <%= envs["SAMBA_BASE_DN"] %>
+        - <%= envs["SAMBA_DC_BASE_DN"] %>
       - force_may: array('uidNumber','gidNumber','sambaSID')
     - login:
-      - bind_id: <%= envs["SAMBA_ADMIN_DN"] %>
-      - bind_pass: <%= envs["SAMBA_ADMIN_PASSWORD"] %>
+      - bind_id: <%= envs["SAMBA_DC_ADMIN_DN"] %>
+      - bind_pass: <%= envs["SAMBA_DC_ADMIN_PASSWORD"] %>
 PHPLDAPADMIN_TRUST_PROXY_SSL: true
 PHPLDAPADMIN_HTTPS: false
 PHPLDAPADMIN_LDAP_HOSTS_FRIENDLY: true

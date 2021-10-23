@@ -1,24 +1,24 @@
 FROM alpine:3.14
 LABEL maintainer="Hailong"
 
-ENV SMABA_ALLOW_DNS_UPDATES=secure \
-  SMABA_DNS_FORWARDER= \
-  SAMBA_BIND_INTERFACES_ONLY=no \
-  SAMBA_DOMAIN_ACTION=provision \
-  SAMBA_DOMAIN_MASTER=auto \
-  SAMBA_INTERFACES= \
-  SAMBA_LOG_LEVEL=1 \
-  SAMBA_MODEL=standard \
-  SAMBA_NETBIOS_NAME= \
-  SAMBA_REALM= \
-  SAMBA_SERVER_STRING="Samba Domain Controller" \
+ENV SAMBA_DC_ALLOW_DNS_UPDATES=secure \
+  SAMBA_DC_DNS_FORWARDER= \
+  SAMBA_DC_BIND_INTERFACES_ONLY=no \
+  SAMBA_DC_DOMAIN_ACTION=provision \
+  SAMBA_DC_DOMAIN_MASTER=auto \
+  SAMBA_DC_INTERFACES= \
+  SAMBA_DC_LOG_LEVEL=1 \
+  SAMBA_DC_MODEL=standard \
+  SAMBA_DC_NETBIOS_NAME= \
+  SAMBA_DC_REALM= \
+  SAMBA_DC_SERVER_STRING="Samba Domain Controller" \
   TZ=UTC \
-  SAMBA_WORKGROUP= \
+  SAMBA_DC_WORKGROUP= \
   LDB_MODULES_PATH=/usr/lib/samba/ldb/
 
-ARG SAMBA_VERSION=4.14.5-r0
+ARG SAMBA_DC_VERSION=4.14.8-r0
 
-RUN apk add --update --no-cache ldb-tools samba-dc=$SAMBA_VERSION samba-winbind-clients \
+RUN apk add --update --no-cache ldb-tools samba-dc=$SAMBA_DC_VERSION samba-winbind-clients \
   bind bind-libs bind-tools krb5 libcrypto1.1 libxml2 tzdata gettext
 
 COPY *.conf.j2 /root/
