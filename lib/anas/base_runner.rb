@@ -108,7 +108,7 @@ module Anas
       missing_envs = []
       @required_envs.each do |env|
         Log.debug("Checking #{env}: #{envs[env]}")
-        unless envs[env]
+        if envs[env].empty?
           missing_envs.append(env)
         end
       end
@@ -223,6 +223,13 @@ module Anas
       ENV.update(@envs)
       running = %x(docker-compose ps --services --filter "status=running")
       return running.empty?
+    end
+
+    def ensure_env!(envs, env_name)
+      if envs[env_name].nil?
+        Log.error("Missing envs #{env_name}")
+        raise NoENVError.new(env_name)
+      end
     end
 
   end

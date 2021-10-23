@@ -206,44 +206,46 @@ module Anas
     # 
     # @param mods_name [Array<String>] mods name
     # @param code [Proc] the code to process
-    def process_mods(mods_name, &block)
+    def process_mods(mods_name, init_result = nil, &block)
       mods_name = all_mods_name if mods_name.nil?
       @done_mods = []
-      result = nil
+      @result = init_result
       def process(mod_name, &block)
         return if @done_mods.include?(mod_name)
         c_node = @all_dependent_nodes[mod_name]
         c_node.dependent_nodes.each do |key, node|
           process(node.mod_name, &block)
         end
-        result = block.call(mod_name, c_node, result)
+        @result = block.call(mod_name, c_node, @result)
         @done_mods.append(mod_name)
       end
       mods_name.each do |mod_name| 
         process(mod_name, &block)
       end
+      return @result
     end
 
     # Process mod by dependency order, reverse dependent order
     # 
     # @param mods_name [Array<String>] mods name
     # @param code [Proc] the code to process
-    def reverse_process_mods(mods_name, &block)
+    def reverse_process_mods(mods_name, init_result = nil, &block)
       mods_name = all_mods_name if mods_name.nil?
       @reverse_done_mods = []
-      result = nil
+      @result = init_result
       def process(mod_name, &block)
         return if @reverse_done_mods.include?(mod_name)
         c_node = @all_dependent_nodes[mod_name]
         c_node.dependency_nodes.each do |d_name, d_node|
           process(d_name, &block)
         end
-        result = block.call(mod_name, c_node, result)
+        @result = block.call(mod_name, c_node, result)
         @reverse_done_mods.append(mod_name)
       end
       mods_name.each do |mod_name| 
         process(mod_name, &block)
       end
+      return @result
     end
   end
 
@@ -288,22 +290,14 @@ module Anas
 
     def check_envs(mods, envs)
       Log.info("Checking envs")
-      @checked_envs = []
-      @missing_envs = {}
-      def check_env(mod, envs)
-        return if @checked_envs.include?(mod)
-        runner = Anas.mod_runner!(mod)
-        runner.dependent_mods.each do |dmod|
-          check_env(dmod, envs)
-        end
-        missing = runner.check_envs(envs)
-        @missing_envs[mod] = missing if !missing.empty? 
-        @checked_envs.append(mod)
+      dependent_tree = @dependent_tree
+      @envs_temp = envs
+      return dependent_tree.process_mods(mods, {}) do |mod_name, node, missing_envs|
+        runner = node.runner
+        missing = runner.check_envs(@envs_temp)
+        missing_envs[mod_name] = missing unless missing.empty?
+        missing_envs
       end
-      mods.each do |mod|
-        check_env(mod, envs)
-      end
-      return @missing_envs
     end
 
     # The module default envs
@@ -332,27 +326,14 @@ module Anas
 
     def cal_envs(mods, envs)
       Log.info("Calculate the envs")
-      full_envs = envs
-
-      @caled_mods = []
-      def mod_cal_envs(mod, envs)
-        return envs if @caled_mods.include?(mod)
-        runner = Anas.mod_runner!(mod)
-        new_envs = envs
-        runner.dependent_mods.each do |dmod|
-          new_envs = mod_cal_envs(dmod, new_envs)
-        end
-        @caled_mods.append(mod)
-        envs = runner.cal_envs(new_envs)
-        runner.envs = envs
-        runner.gen_files(envs)
-        return envs.value_to_string!
+      dependent_tree = @dependent_tree
+      return dependent_tree.process_mods(mods, envs) do |mod_name, node, envs|
+        runner = node.runner
+        new_envs = runner.cal_envs(envs)
+        runner.envs = new_envs
+        runner.gen_files(new_envs)
+        new_envs.value_to_string!
       end
-
-      mods.each do |mod|
-        full_envs = mod_cal_envs(mod, full_envs)
-      end
-      return full_envs
     end
 
     def start_mods(mods, envs)
@@ -369,33 +350,19 @@ module Anas
       dependent_tree.reverse_process_mods(mods) do |mod_name, node|
         node.runner.stop
       end
-      # def stop_mod(node, dependent_tree)
-      #   node.dependency_nodes.each do |mod_name, n|
-      #     stop_mod(n, dependent_tree)
-      #   end
-      #   node.runner.stop
-      #   dependent_tree.rm_node!(node.mod_name)
-      # end
-      # stop_mod(dependent_tree.root_node, dependent_tree)
     end
 
     def build_mods(mods, envs)
       Log.info("Start build modules")
-      @built_mods = []
-      def build_mod(mod, envs)
-        return {} if @built_mods.include?(mod)
-        runner = Anas.mod_runner!(mod)
-        runner.dependent_mods.each do |dmod|
-          build_mod(dmod, envs)
-        end
-        runner.build
-        @built_mods.append(mod)
-      end
-      mods.each do |mod|
-        build_mod(mod, envs)
+      dependent_tree = @dependent_tree
+      dependent_tree.process_mods(mods) do |mod_name, node|
+        node.runner.build
       end
     end
 
+    # Calculate the envs, build dependent tree, & set envs to runner
+    # 
+    # @return [Hash<String, String>] full envs
     def process_envs()
       mods = @mods
       static_envs = get_default_envs(mods)
@@ -411,7 +378,7 @@ module Anas
       Log.debug("Calculate envs is \n #{envs}")
       missing_envs = check_envs(@mods, envs)
       unless missing_envs.empty?
-        Log.error("Have missing envs\n#{missing_envs}")
+        Log.error("Missing envs\n#{missing_envs}")
         raise NoENVError.new(missing_envs)
       end
       return envs
