@@ -202,22 +202,44 @@ module Anas
       return mods_name
     end
 
-    # Run mod 
+    # Process mod by dependent order
     # 
     # @param mods_name [Array<String>] mods name
     # @param code [Proc] the code to process
     def process_mods(mods_name, &block)
       mods_name = all_mods_name if mods_name.nil?
-      @running_mods = []
+      @done_mods = []
       result = nil
       def process(mod_name, &block)
-        return if @running_mods.include?(mod_name)
+        return if @done_mods.include?(mod_name)
         c_node = @all_dependent_nodes[mod_name]
         c_node.dependent_nodes.each do |key, node|
           process(node.mod_name, &block)
         end
         result = block.call(mod_name, c_node, result)
-        @running_mods.append(mod_name)
+        @done_mods.append(mod_name)
+      end
+      mods_name.each do |mod_name| 
+        process(mod_name, &block)
+      end
+    end
+
+    # Process mod by dependency order, reverse dependent order
+    # 
+    # @param mods_name [Array<String>] mods name
+    # @param code [Proc] the code to process
+    def reverse_process_mods(mods_name, &block)
+      mods_name = all_mods_name if mods_name.nil?
+      @reverse_done_mods = []
+      result = nil
+      def process(mod_name, &block)
+        return if @reverse_done_mods.include?(mod_name)
+        c_node = @all_dependent_nodes[mod_name]
+        c_node.dependency_nodes.each do |d_name, d_node|
+          process(d_name, &block)
+        end
+        result = block.call(mod_name, c_node, result)
+        @reverse_done_mods.append(mod_name)
       end
       mods_name.each do |mod_name| 
         process(mod_name, &block)
@@ -341,18 +363,20 @@ module Anas
       end
     end
 
-    def stop_mods(mods, envs)
+    def stop_mods(mods)
       Log.info("Stop modules")
       dependent_tree = @dependent_tree
-
-      def stop_mod(node, dependent_tree)
-        node.dependency_nodes.each do |mod_name, n|
-          stop_mod(n, dependent_tree)
-        end
+      dependent_tree.reverse_process_mods(mods) do |mod_name, node|
         node.runner.stop
-        dependent_tree.rm_node!(node.mod_name)
       end
-      stop_mod(dependent_tree.root_node, dependent_tree)
+      # def stop_mod(node, dependent_tree)
+      #   node.dependency_nodes.each do |mod_name, n|
+      #     stop_mod(n, dependent_tree)
+      #   end
+      #   node.runner.stop
+      #   dependent_tree.rm_node!(node.mod_name)
+      # end
+      # stop_mod(dependent_tree.root_node, dependent_tree)
     end
 
     def build_mods(mods, envs)
@@ -404,7 +428,7 @@ module Anas
 
     def restart
       envs = process_envs
-      stop_mods(@mods, envs)
+      stop_mods([@dependent_tree.root_node.mod_name])
       envs = process_envs
       if @options[:build]
         build_mods(@mods, envs)
@@ -422,7 +446,7 @@ module Anas
 
     def stop
       envs = process_envs
-      stop_mods(@mods, envs)
+      stop_mods([@dependent_tree.root_node.mod_name])
       # mod_runner!('traefik').run(envs)
     end
 
