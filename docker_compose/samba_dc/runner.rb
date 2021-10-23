@@ -4,8 +4,8 @@ module Anas
   class SambaDcRunner < BaseRunner
     def initialize()
       super
-      @required_envs = []
-      @optional_envs = ['SAMBA_REALM', 'SAMBA_WORKGROUP','SAMBA_ADMIN_PASSWORD', 
+      @required_envs = ['SAMBA_ADMIN_PASSWORD']
+      @optional_envs = ['SAMBA_REALM', 'SAMBA_WORKGROUP', 
         'SAMBA_SERVER_STRING', 'SAMBA_NETBIOS_NAME', 'SAMBA_INTERFACES',
         'SMABA_DNS_FORWARDER', 'SMABA_APP_FILTER', 'SAMBA_CREATE_STRUCTURE',
         'SMABA_ADMIN_NAME', 'SAMBA_TEMPLATE_SHELL', 'SAMBA_TEMPLATE_HOMEDIR',
@@ -23,6 +23,7 @@ module Anas
 
     def cal_envs(envs)
       new_envs = envs
+      ensure_env!(envs, 'BASE_DOMAIN_NAME')
       new_envs['SAMBA_DOMAIN_NAME'] = envs['BASE_DOMAIN_NAME']
       new_envs['SAMBA_REALM'] = envs['BASE_DOMAIN_NAME'].to_s.upcase unless envs.has_key?('SAMBA_REALM')
       new_envs['SAMBA_ADMIN_PASSWORD'] = envs['DEFAULT_ROOT_PASSWORD'] unless envs.has_key?('SAMBA_ADMIN_PASSWORD')

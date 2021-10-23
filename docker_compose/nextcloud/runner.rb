@@ -4,10 +4,10 @@ module Anas
     def initialize()
       super
       # TODO: sso
-      @required_envs = ['MYSQL_ROOT_PASSWORD'] # TODO
+      @required_envs = ['MYSQL_ROOT_PASSWORD', 'NEXTCLOUD_ADMIN_PASSWORD'] # TODO
       @optional_envs = [
         'NEXTCLOUD_DOMAIN_NAME_PREFIX', 'NEXTCLOUD_DB_NAME', 'NEXTCLOUD_PHONE_REGION',
-        'NEXTCLOUD_ADMIN_USERNAME', 'NEXTCLOUD_ADMIN_PASSWORD', 'NEXTCLOUD_USER_FILTER',
+        'NEXTCLOUD_ADMIN_USERNAME', 'NEXTCLOUD_USER_FILTER',
         'NEXTCLOUD_DEFAULT_QUOTA', 'NEXTCLOUD_PATH', 'NEXTCLOUD_USER_MIN_PASS_LENGTH',
         'NEXTCLOUD_USER_COMPLEX_PASS', 'NEXTCLOUD_USER_MAX_PASS_AGE', 'NEXTCLOUD_RM_AUTOGEN_FILES',
       ]
@@ -69,6 +69,10 @@ module Anas
 
     def use_ldap?
       return true
+    end
+
+    def run_after_mods(envs)
+      return ['samba_dc']
     end
   end
 end
