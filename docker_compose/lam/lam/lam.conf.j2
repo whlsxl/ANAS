@@ -5,22 +5,22 @@
 ###################################################################################################
 
 # server address (e.g. ldap://localhost:389 or ldaps://localhost:636)
-ServerURL: <%= "#{envs["SAMBA_DC_SERVER_URL"]}" %>
+ServerURL: ${SAMBA_DC_SERVER_URL}
 
 # list of users who are allowed to use LDAP Account Manager
 # names have to be separated by semicolons
 # e.g. admins: cn=admin,dc=yourdomain,dc=org;cn=root,dc=yourdomain,dc=org
-Admins: <%= "#{envs["SAMBA_DC_ADMIN_DN"]}" %>
+Admins: ${SAMBA_DC_ADMIN_DN}
 
 # password to change these preferences via webfrontend (default: lam)
-<%# Passwd: lam %>
+Passwd: ${LAM_ADMIN_PASSWORD}
 
 # suffix of tree view
 # e.g. dc=yourdomain,dc=org
-tools: treeViewSuffix: <%= "#{envs["SAMBA_DC_BASE_DN"]}" %>
+tools: treeViewSuffix: ${SAMBA_DC_BASE_DN}
 
 # default language (a line from config/language)
-defaultLanguage: <%= "#{envs["LAM_LANGUAGE"]}" %>
+defaultLanguage: ${LAM_LANGUAGE}
 
 # Path to external Script
 scriptPath:
@@ -55,19 +55,19 @@ modules: posixAccount_pwdHash: SSHA
 activeTypes: user,group,host
 
 
-types: suffix_user: <%= "#{envs["SAMBA_DC_BASE_USERS_DN"]}" %>
+types: suffix_user: ${SAMBA_DC_BASE_USERS_DN}
 types: attr_user: #cn;#displayName;#sAMAccountName;#name;#userPrincipalName;#givenName;#sn;#mail
 types: modules_user: windowsUser
 
-types: suffix_group: <%= "#{envs["SAMBA_DC_BASE_GROUPS_DN"]}" %>
+types: suffix_group: ${SAMBA_DC_BASE_GROUPS_DN}
 types: attr_group: #cn;#name;#member;#description;#gidNumber
 types: modules_group: windowsGroup
 
-types: suffix_host: <%= "#{envs["SAMBA_DC_BASE_COMPUTERS_DN"]}" %>
+types: suffix_host: ${SAMBA_DC_BASE_COMPUTERS_DN}
 types: attr_host: #cn;#description;#location
 types: modules_host: windowsHost
 
-types: suffix_smbDomain: <%= "#{envs["SAMBA_DC_BASE_DN"]}" %>
+types: suffix_smbDomain: ${SAMBA_DC_BASE_DN}
 types: attr_smbDomain: sambaDomainName:Domain name;sambaSID:Domain SID
 types: modules_smbDomain: sambaDomain
 
@@ -79,7 +79,7 @@ lamProMailText: Dear @@givenName@@ @@sn@@,+::++::+your password was reset to: @@
 
 
 
-<%# # enable TLS encryption
+# enable TLS encryption
 useTLS: true
 
 
@@ -92,7 +92,7 @@ loginMethod: list
 
 
 # Search suffix for LAM login.
-loginSearchSuffix: dc=yourdomain,dc=org
+loginSearchSuffix: ${SAMBA_DC_BASE_DN}
 
 
 # Search filter for LAM login.
@@ -116,7 +116,7 @@ lamProMailFrom:
 
 
 # Password mail reply-to
-lamProMailReplyTo: %>
+lamProMailReplyTo:
 
 
 # Password mail is HTML
@@ -190,7 +190,7 @@ modules: posixAccount_shells: /bin/bash+::+/bin/csh+::+/bin/dash+::+/bin/false+:
 modules: posixAccount_user_hidegecos: false
 modules: posixAccount_primaryGroupAsSecondary: false
 modules: posixAccount_user_userNameSuggestion: @givenname@%sn%
-modules: windowsUser_domains: <%= "#{envs["SAMBA_DC_DOMAIN_NAME"]}" %>
+modules: windowsUser_domains: ${SAMBA_DC_DOMAIN_NAME}
 modules: windowsUser_hidesAMAccountName: false
 tools: tool_hide_toolMultiEdit: false
 
