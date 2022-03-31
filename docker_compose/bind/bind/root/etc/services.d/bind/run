@@ -1,0 +1,7 @@
+#!/usr/bin/with-contenv bash
+
+if [ $BIND_DEBUG == "true" ]; then
+  exec nohup sh -c "named -u abc -f -g 2>&1 | tee /tmp/named.log" # Debug
+else
+  exec nohup sh -c "named -u abc -f -g"
+fi

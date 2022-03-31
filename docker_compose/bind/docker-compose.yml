@@ -1,0 +1,20 @@
+version: "3.5"
+
+services:
+  bind:
+    container_name: ${CONTAINER_PREFIX}${MODULE_NAME}
+    build: ./${MODULE_NAME}
+    image: ${IMAGE_PREFIX}${MODULE_NAME}:latest
+    restart: unless-stopped
+    network_mode: host
+    devices:
+      - /dev/fuse
+    security_opt:
+      - apparmor:unconfined
+    env_file:
+      - .env
+    cap_add:
+      - SYS_ADMIN
+    ports:
+      - 53:53
+      - 53:53/udp
