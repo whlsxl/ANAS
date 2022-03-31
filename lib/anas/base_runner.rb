@@ -28,8 +28,14 @@ module Anas
     # @return [String] copy & render erb files to temp dir
     attr_reader :working_path
 
-    # @return [String] All the envs use in docker
+    # @return [Hash<String, Any>] All the envs use in docker
     attr_accessor :envs
+
+    # @return [String] use `docker compose` or `docker-compose`
+    attr_accessor :docker_compose_cmd
+
+    # @return [Runner] `core` runner
+    attr_accessor :core_runner
 
     def tmp_path=(new_tmp_path)
       @tmp_path = new_tmp_path
@@ -48,10 +54,11 @@ module Anas
       @mod_name = get_mod_name
       @working_path = nil
       @is_gened_files = false
+      @docker_compose_cmd = nil
       Log.info("Init `#{@mod_name}`` class")
-      ObjectSpace.define_finalizer(self, lambda do |id| 
+      # ObjectSpace.define_finalizer(self, lambda do |id| 
         # FileUtils.remove_entry(@working_path)
-      end)
+      # end)
     end
 
     def reset_temp_path
@@ -77,13 +84,13 @@ module Anas
       root_path = File.expand_path('../../..', __FILE__)
       return File.join(root_path, 'docker_compose', @mod_name)
     end
-
+    
     # Copy all file to working path, render all erb files
     def render_files!(envs)
       Log.debug("Copy `#{@mod_name}` docker_compose dir from #{get_docker_compose_path} to #{@working_path}")
       FileUtils.cp_r("#{get_docker_compose_path}/.", @working_path)
-      Log.info("Rendering `#{@mod_name}` erbs'")
-      envs_hash = {envs: envs}
+      Log.info("Rendering `#{@mod_name}` erbs")
+      envs_hash = {envs: append_module_env(envs)}
       Dir.glob("#{@working_path}/**/*.erb").each do |erb_file|
         return if File.directory?(erb_file)
         Log.info("Rendering #{erb_file}")
@@ -107,8 +114,8 @@ module Anas
       Log.info("Checking `#{@mod_name}` envs")
       missing_envs = []
       @required_envs.each do |env|
-        Log.debug("Checking #{env}: #{envs[env]}")
-        if envs[env].empty?
+        Log.debug("Checking #{env}: #{envs[env] || ''}")
+        unless envs.key?(env) && !envs[env].empty?
           missing_envs.append(env)
         end
       end
@@ -125,6 +132,17 @@ module Anas
       return envs
     end
 
+    def module_envs(envs)
+      return envs
+    end
+
+    def append_module_env(envs)
+      # Add module related env
+      new_envs = module_envs(envs)
+      new_envs['MODULE_NAME'] = @mod_name
+      return new_envs
+    end
+
     def gen_files(envs)
       gen_envs_file!(envs)
       render_files!(envs)
@@ -132,10 +150,11 @@ module Anas
     end
 
     def gen_envs_file!(envs)
-      env_file = File.expand_path("#{@mod_name}.env", @working_path)
+      env_file = File.expand_path(".env", @working_path)
       Log.info("Gen envs file #{env_file}")
       File.open(env_file, 'w') do |file|
-        envs.each do |key, value|
+        new_envs = append_module_env(envs)
+        new_envs.each do |key, value|
           file.write "#{key}=#{value}\n"
         end
       end
@@ -162,12 +181,12 @@ module Anas
         the_path = @working_path
         Log.debug("Entry @working_path #{the_path}")
         Dir.chdir(the_path)
-        result = system(@envs, "docker-compose build", exception: true)
+        result = system("#{@docker_compose_cmd} build", exception: true)
       rescue => exception
         Log.error("Building #{@mod_name} ERROR #{exception}")
         raise exception
       end
-      Log.info("Module built #{@mod_name}")
+      Log.info("Module has been built #{@mod_name}")
     end
 
     def start
@@ -176,7 +195,7 @@ module Anas
         the_path = @working_path
         Log.debug("Entry @working_path #{the_path}")
         Dir.chdir(the_path)
-        result = system(@envs, "docker-compose up -d", exception: true)
+        result = system("#{@docker_compose_cmd} up -d", exception: true)
       rescue => exception
         Log.error("Start #{@mod_name} ERROR #{exception}")
         raise exception
@@ -198,7 +217,7 @@ module Anas
       begin
         Log.debug("Entry @working_path #{@working_path}")
         Dir.chdir(@working_path)
-        result = system(@envs, "docker-compose down")
+        result = system("#{@docker_compose_cmd} down")
       rescue => exception
         Log.error("Stop #{@mod_name} ERROR #{exception}")
         raise exception
@@ -221,7 +240,7 @@ module Anas
     def is_running?
       Dir.chdir(@working_path)
       ENV.update(@envs)
-      running = %x(docker-compose ps --services --filter "status=running")
+      running = %x(#{@docker_compose_cmd} ps --services --filter "status=running")
       return running.empty?
     end
 

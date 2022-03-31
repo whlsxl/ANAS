@@ -17,8 +17,6 @@ services:
       - "DEBUG=true"
     networks:
       - traefik
-    env_file:
-      - lam.env
 
 networks:
   traefik:

@@ -28,7 +28,6 @@ services:
       - "traefik.http.middlewares.nextcloud-header.headers.customFrameOptionsValue=SAMEORIGIN"
       - "traefik.http.middlewares.nextcloud-header.headers.customRequestHeaders.X-Forwarded-Proto=https"
     env_file:
-      - nextcloud.env
       - .env
     environment:
       - "DB_TYPE=mysql"
@@ -51,7 +50,6 @@ services:
     volumes:
       - "${NEXTCLOUD_PATH}:/data"
     env_file:
-      - nextcloud.env
       - .env
     environment:
       - "DB_TYPE=mysql"
@@ -75,7 +73,6 @@ services:
     volumes:
       - "${NEXTCLOUD_PATH}:/data"
     env_file:
-      - nextcloud.env
       - .env
     environment:
       - "DB_TYPE=mysql"
@@ -99,7 +96,6 @@ services:
     volumes:
       - "${NEXTCLOUD_PATH}:/data"
     env_file:
-      - nextcloud.env
       - .env
     environment:
       - "DB_TYPE=mysql"

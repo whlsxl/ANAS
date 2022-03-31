@@ -4,12 +4,12 @@ services:
   lego:
     build: ./lego
     container_name: ${CONTAINER_PREFIX}lego
-    image: lego
+    image: ${IMAGE_PREFIX}lego:latest
     restart: unless-stopped
     volumes:
       - "${LEGO_DATA_PATH}:/certs"
     env_file:
-      - lego.env
+      - .env
 
 networks:
   default:

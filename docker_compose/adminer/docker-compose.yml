@@ -17,7 +17,7 @@ services:
       - mysql
       - traefik
     env_file:
-      - adminer.env
+      - .env
 networks:
   mysql:
     external:

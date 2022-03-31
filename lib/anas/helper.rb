@@ -50,4 +50,16 @@ class String
     tr("-", "_").
     downcase
   end
+
+  def cmd_exist
+    begin
+      result = `#{self}`
+      if $?.exitstatus != 0
+        return false
+      end
+      return result
+    rescue => exception
+      return false
+    end
+  end
 end

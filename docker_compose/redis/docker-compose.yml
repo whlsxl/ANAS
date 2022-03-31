@@ -5,8 +5,8 @@ services:
     container_name: ${CONTAINER_PREFIX}redis
     image: redis:6.2.1-alpine
     restart: unless-stopped
-    environment:
-      - TZ
+    env_file:
+      - .env
 networks:
   default:
     driver: bridge

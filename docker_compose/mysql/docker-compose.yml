@@ -5,6 +5,8 @@ services:
     container_name: ${CONTAINER_PREFIX}mysql
     image: ghcr.io/linuxserver/mariadb:alpine-version-10.5.9-r0
     restart: unless-stopped
+    env_file:
+      - .env
     environment:
       - PUID
       - PGID

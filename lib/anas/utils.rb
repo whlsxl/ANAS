@@ -7,12 +7,17 @@ module Anas
   class NoENVError < StandardError; end
   class LoadModuleError < StandardError; end
   class ConfigError < StandardError; end
+  class NotInstalledError < StandardError; end
   class HasDependencyError < StandardError; end
 
   # Loggers, default level is `info`
   Log = Logger.new(STDOUT)
   TmpPath = File.join(Dir.tmpdir, "anas")
   @runner_classes = {}
+  @@docker_compose_cmd = nil
+
+  def self.docker_compose_cmd; @@docker_compose_cmd end
+  def self.docker_compose_cmd= v; @@docker_compose_cmd = v end
 
   def mod_runner!(mod)
     return @runner_classes[mod] if @runner_classes[mod]
@@ -21,6 +26,8 @@ module Anas
       runner = "Anas::#{mod.camelize}Runner".classify.new
       runner.tmp_path = TmpPath
       @runner_classes[mod] = runner
+      runner.docker_compose_cmd = Anas.docker_compose_cmd
+      runner.core_runner = @runner_classes['core']
       return runner
     rescue => exception
       Log.error("Load module #{mod} exception: #{exception}")
@@ -98,6 +105,12 @@ module Anas
     attr_accessor :mod_names
     attr_accessor :all_dependent_nodes
 
+    def initialize(mod_names, envs)
+      @mod_names = mod_names
+      @all_dependent_nodes = {}
+      build_dependent(mod_names, envs)
+    end
+
     def build_dependent(mod_names, static_envs)
       @static_envs = static_envs
       def build_node_dependent(mod_name) 
@@ -163,12 +176,6 @@ module Anas
       end
     end
 
-    def initialize(mod_names, envs)
-      @mod_names = mod_names
-      @all_dependent_nodes = {}
-      build_dependent(mod_names, envs)
-    end
-
     def root_node
       return @all_dependent_nodes['core']
     end
@@ -203,6 +210,7 @@ module Anas
     end
 
     # Process mod by dependent order
+    # block return value can't use `return`
     # 
     # @param mods_name [Array<String>] mods name
     # @param code [Proc] the code to process
@@ -239,7 +247,7 @@ module Anas
         c_node.dependency_nodes.each do |d_name, d_node|
           process(d_name, &block)
         end
-        @result = block.call(mod_name, c_node, result)
+        @result = block.call(mod_name, c_node, @result)
         @reverse_done_mods.append(mod_name)
       end
       mods_name.each do |mod_name| 
@@ -271,6 +279,8 @@ module Anas
       @running_mods = []
       @built_mods = []
       @dependent_tree = nil
+
+      check_system_envs
     end
 
     def write_config!
@@ -279,6 +289,33 @@ module Anas
         f.write @config.to_yaml
       end
       Log.info("Write config to #{path}")
+    end
+
+    def check_system_envs # check tools
+      Log.info("Checking your system...")
+      Log.info("Checking Docker...")
+      docker_result = 'docker -v'.cmd_exist
+      if docker_result
+        version = /version (\S+)/.match(docker_result)[1]
+        Log.info("docker version: #{version}")
+      else
+        raise NotInstalledError.new("Docker not install")
+      end
+      dockercompose_result = 'docker compose version'.cmd_exist
+      if dockercompose_result
+        version = /version (\S+)/.match(dockercompose_result)[1]
+        Anas.docker_compose_cmd = 'docker compose'
+        Log.info("Use `docker compose` version: #{version}")
+      else
+        docker_compose_result = 'docker-compose -v'.cmd_exist
+        if docker_compose_result
+          version = /version ([\d.]+)/.match(docker_compose_result)[1]
+          Anas.docker_compose_cmd = 'docker-compose'
+          Log.info("Use `docker-compose` version: #{version}")
+        else
+          raise NotInstalledError.new("Docker compose not install")
+        end
+      end
     end
 
     def get_all_mod_names
@@ -291,10 +328,9 @@ module Anas
     def check_envs(mods, envs)
       Log.info("Checking envs")
       dependent_tree = @dependent_tree
-      @envs_temp = envs
       return dependent_tree.process_mods(mods, {}) do |mod_name, node, missing_envs|
         runner = node.runner
-        missing = runner.check_envs(@envs_temp)
+        missing = runner.check_envs(runner.envs)
         missing_envs[mod_name] = missing unless missing.empty?
         missing_envs
       end
@@ -330,9 +366,10 @@ module Anas
       return dependent_tree.process_mods(mods, envs) do |mod_name, node, envs|
         runner = node.runner
         new_envs = runner.cal_envs(envs)
-        runner.envs = new_envs
-        runner.gen_files(new_envs)
-        new_envs.value_to_string!
+        new_envs_clone = new_envs.clone
+        runner.envs = new_envs_clone
+        runner.gen_files(new_envs_clone)
+        new_envs
       end
     end
 

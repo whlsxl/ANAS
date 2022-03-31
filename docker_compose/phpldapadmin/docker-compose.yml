@@ -15,7 +15,7 @@ services:
     networks:
       - traefik
     env_file:
-      - phpldapadmin.env
+      - .env
 networks:
   traefik:
     external:
