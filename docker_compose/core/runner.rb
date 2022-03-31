@@ -1,4 +1,6 @@
 require 'htauth'
+require 'sshkey'
+require 'resolv'
 
 module Anas
   class CoreRunner < BaseRunner
@@ -14,14 +16,51 @@ module Anas
         'PUID' => 1000, 'PGID' => 1000, 'BASICAUTH_USER' => 'admin',
         'DEFAULT_LANGUAGE' => 'zh',
       }
-      @default_envs['HOST_IPS'] =  %x( /sbin/ip route | awk '/default/ { print $3 }' )
-      ips = @default_envs['HOST_IPS'].split("\n")
-      @default_envs['HOST_IPS_ARRAY'] = "['#{ips.join("', '")}']"
+      @default_envs['HOST_IP'] =  %x( ip addr show | grep -E '^\s*inet' | grep -m1 global | awk '{ print $2 }' | sed 's|/.*||' )
+      @default_envs['GATEWAY_IP'] =  %x( /sbin/ip route | awk '/default/ { print $3 }' )
+      currentDNS = Resolv::DNS::Config.default_config_hash[:nameserver]
+      @default_envs['DNS_SERVER'] = currentDNS.join(' ')
       @dependent_mods = []
+      @perpare_envs = {} #after deploy_files, cal some envs need to merge
+    end
+    
+    def tmp_path=(new_tmp_path)
+      super
+      perpare_files
+    end
+
+    def deploy_files(key, location)
+      the_path = @working_path
+      # create directory
+      path = File.dirname(location)
+      unless File.directory?(path)
+        FileUtils.mkdir_p(path)
+      end
+      case key
+      when 'ssh_rsa_private'
+        FileUtils.cp(File.expand_path("id_rsa", @working_path), location)
+      when 'ssh_rsa_public'
+        FileUtils.cp(File.expand_path("id_rsa.pub", @working_path), location)
+      end
+    end
+
+    def perpare_files()
+      the_path = @working_path
+      k = SSHKey.generate
+      rsa_path = File.expand_path("id_rsa", @working_path)
+      File.open(rsa_path, 'w') do |file|
+        file.write k.private_key
+      end
+      rsa_pub_path = File.expand_path("id_rsa.pub", @working_path)
+      File.open(rsa_pub_path, 'w') do |file|
+        file.write k.ssh_public_key
+      end
+      @perpare_envs['SSH_RSA_PRIVATE'] = k.ssh_public_key
     end
 
     def cal_envs(envs)
-      new_envs = envs
+      new_envs = @perpare_envs.merge(envs)
+      new_envs['DOCKER_ALPINE_VERSION'] = "3.15"
       unless envs.has_key?('BASICAUTH_HTPASSWD')
         pass = envs['BASICAUTH_PASSWD'] 
         if pass.nil? || pass.empty?

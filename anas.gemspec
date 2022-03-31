@@ -26,6 +26,7 @@ Gem::Specification.new do |spec|
 
   spec.add_dependency 'commander', '~> 4.5'
   spec.add_dependency 'htauth', '~> 2.1'
+  spec.add_dependency 'sshkey', '~> 2.0'
 
   # spec.add_development_dependency "bundler", '~> 2.0'
   # spec.add_development_dependency "rake", '~> 0'
