@@ -1,5 +1,3 @@
-require 'resolv'
-
 module Anas
   class SambaDcRunner < BaseRunner
     def initialize()
@@ -7,18 +5,18 @@ module Anas
       @required_envs = ['SAMBA_DC_ADMIN_PASSWORD']
       @optional_envs = ['SAMBA_DC_REALM', 'SAMBA_DC_WORKGROUP', 
         'SAMBA_DC_SERVER_STRING', 'SAMBA_DC_NETBIOS_NAME', 'SAMBA_DC_INTERFACES',
-        'SAMBA_DC_DNS_FORWARDER', 'SAMBA_DC_APP_FILTER', 'SAMBA_DC_CREATE_STRUCTURE',
+        'SAMBA_DC_APP_FILTER', 'SAMBA_DC_CREATE_STRUCTURE',
         'SAMBA_DC_ADMIN_NAME', 'SAMBA_DC_TEMPLATE_SHELL', 'SAMBA_DC_TEMPLATE_HOMEDIR',
         'SAMBA_DC_DOMAIN_USERS_GID_NUMBER', 'SAMBA_DC_USER_COMPLEX_PASS', 'SAMBA_DC_USER_MAX_PASS_AGE',
-        'SAMBA_DC_USER_MAX_PASS_LENGTH'
+        'SAMBA_DC_USER_MAX_PASS_LENGTH', 'SAMBA_DC_LOG_LEVEL'
       ]
       @default_envs = {'SAMBA_DC_APP_FILTER' => 'false', 'SAMBA_DC_CREATE_STRUCTURE' => 'true',
         'SAMBA_DC_ADMIN_NAME' => 'Administrator', 'SAMBA_DC_TEMPLATE_SHELL' => '/bin/false',
         'SAMBA_DC_TEMPLATE_HOMEDIR' => '/home/%D/%U', 'SAMBA_DC_DOMAIN_USERS_GID_NUMBER' => 10000,
         'SAMBA_DC_USER_COMPLEX_PASS' => true, 'SAMBA_DC_USER_MAX_PASS_AGE' => 70, 
-        'SAMBA_DC_USER_MIN_PASS_LENGTH' => 7,
+        'SAMBA_DC_USER_MIN_PASS_LENGTH' => 7, 'SAMBA_DC_LOG_LEVEL' => 1,
       }
-      @dependent_mods = ['lego']
+      @dependent_mods = ['lego', 'bind']
     end
 
     def cal_envs(envs)
@@ -27,10 +25,6 @@ module Anas
       new_envs['SAMBA_DC_DOMAIN_NAME'] = envs['BASE_DOMAIN_NAME']
       new_envs['SAMBA_DC_REALM'] = envs['BASE_DOMAIN_NAME'].to_s.upcase unless envs.has_key?('SAMBA_DC_REALM')
       new_envs['SAMBA_DC_ADMIN_PASSWORD'] = envs['DEFAULT_ROOT_PASSWORD'] unless envs.has_key?('SAMBA_DC_ADMIN_PASSWORD')
-      unless envs.has_key?('SAMBA_DC_DNS_FORWARDER') 
-        currentDNS = Resolv::DNS::Config.default_config_hash[:nameserver]
-        new_envs['SAMBA_DC_DNS_FORWARDER'] = currentDNS.join(' ')
-      end
       new_envs['SAMBA_DC_SERVER_URL'] = "ldaps://#{envs['BASE_DOMAIN_NAME']}" unless envs.has_key?('SAMBA_DC_SERVER_FULL_URL')
       new_envs['SAMBA_DC_PORT'] = "636"
       new_envs['SAMBA_DC_SERVER_URL_PORT'] = "#{envs['SAMBA_DC_SERVER_URL']}:#{envs['SAMBA_DC_PORT']}"
@@ -49,6 +43,20 @@ module Anas
       new_envs['SAMBA_DC_USER_DISPLAY_NAME'] = 'displayName'
       new_envs['SAMBA_DC_GROUP_DISPLAY_NAME'] = 'name'
       return new_envs
+    end
+
+    def module_envs(envs)
+      new_envs = envs
+      new_envs['KRB5RCACHETYPE'] = 'none'
+      return new_envs
+    end
+
+    def render_files!(envs)
+      file_path = File.expand_path("samba_dc/root/root/.ssh/authorized_keys", @working_path)
+      File.open(file_path, 'w') do |file|
+        file.write envs['SSH_RSA_PRIVATE']
+      end
+      super
     end
   end
 end

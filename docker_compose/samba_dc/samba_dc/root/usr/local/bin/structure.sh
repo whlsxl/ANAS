@@ -1,4 +1,4 @@
-#!/bin/sh -e
+#!/usr/bin/with-contenv bash
 
 LDBSEARCH_CMD_PREFIX="ldbsearch -H /var/lib/samba/private/sam.ldb"
 
@@ -20,7 +20,7 @@ create_ou() { # $1 ou name, $2 base dn $3 description
   if dn_exist $dn; then
     echo "dn: $dn is exist"
   else
-    echo $( samba-tool ou add "$dn" --description="$3" )
+    echo $( samba-tool ou create "$dn" --description="$3" )
     echo "Create dn: $dn description: $3"
   fi
 }
@@ -35,10 +35,11 @@ create_group() { # $1 group name, $2 base dn $3 description
   fi
 }
 
+# waiting for samba startup
 sleep 20
 
 # set `Domain Users` group gidNumber
-if [ -z get_group_attr "Domain Users" gidNumber]; then
+if [ -z $(get_group_attr "Domain Users" gidNumber) ]; then
   echo "Set 'Domain Users' gidNumber: $SAMBA_DC_DOMAIN_USERS_GID_NUMBER"
   echo  $(samba-tool group addunixattrs 'Domain Users' $SAMBA_DC_DOMAIN_USERS_GID_NUMBER)
 fi
@@ -56,16 +57,16 @@ if [ $SAMBA_DC_APP_FILTER == "true" ]; then
 fi
 
 # deal with Administrator
-if [ ! -z "$SAMBA_DC_ADMIN_NAME" ]; then
-  echo "Deal with Administrator"
-  sAMAccountName=$( get_attribute_dn 'description=Built-in account for administering the computer/domain' sAMAccountName )
-  if [ $sAMAccountName == $SAMBA_DC_ADMIN_NAME ]; then
-    echo "Administrator name already: $SAMBA_DC_ADMIN_NAME "
-  else
-    echo "Administrator rename $sAMAccountName => $SAMBA_DC_ADMIN_NAME"
-    echo $(samba-tool user rename $sAMAccountName --samaccountname=$SAMBA_DC_ADMIN_NAME)
-  fi
-fi
+# if [ ! -z "$SAMBA_DC_ADMIN_NAME" ]; then
+#   echo "Deal with Administrator"
+#   sAMAccountName=$( get_attribute_dn 'description=Built-in account for administering the computer/domain' sAMAccountName )
+#   if [ $sAMAccountName == $SAMBA_DC_ADMIN_NAME ]; then
+#     echo "Administrator name already: $SAMBA_DC_ADMIN_NAME "
+#   else
+#     echo "Administrator rename $sAMAccountName => $SAMBA_DC_ADMIN_NAME"
+#     echo $(samba-tool user rename $sAMAccountName --samaccountname=$SAMBA_DC_ADMIN_NAME)
+#   fi
+# fi
 
 # auto create ldap structure
 if [ $SAMBA_DC_CREATE_STRUCTURE == "true" ]; then
@@ -83,16 +84,22 @@ fi
 # samba password rule
 echo "Apply default user password rule"
 samba-tool domain passwordsettings set --min-pwd-age=0
+echo "Set Samba DC user min password age: 0"
 samba-tool domain passwordsettings set --max-pwd-age=$SAMBA_DC_USER_MAX_PASS_AGE
+echo "Set Samba DC user max password age: $SAMBA_DC_USER_MAX_PASS_AGE"
 samba-tool domain passwordsettings set --min-pwd-length=$SAMBA_DC_USER_MIN_PASS_LENGTH
+echo "Set Samba DC user min password length: $SAMBA_DC_USER_MIN_PASS_LENGTH"
 samba-tool domain passwordsettings set --history-length=0
+echo "Set Samba DC user password history length: 0"
 if [ $SAMBA_DC_USER_COMPLEX_PASS == "true" ]; then
   samba-tool domain passwordsettings set --complexity=on
 else
   samba-tool domain passwordsettings set --complexity=off
 fi
+echo "Set Samba DC user password complex: $SAMBA_DC_USER_COMPLEX_PASS"
 
-# samba administrator password rule
+# samba administrator password rule 
+#TODO: fix password rule
 echo $(samba-tool domain passwordsettings pso create "pso_administrator" 1 --min-pwd-length=7  --complexity=on \
               --history-length=0 --min-pwd-age=0 --max-pwd-age=0) 
 admin_pso="$(samba-tool domain passwordsettings pso show-user $SAMBA_DC_ADMIN_NAME)"

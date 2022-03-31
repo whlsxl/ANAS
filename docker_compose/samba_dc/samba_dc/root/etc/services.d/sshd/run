@@ -1,0 +1,7 @@
+#!/usr/bin/with-contenv bash
+
+# /usr/sbin/sshd -D -ddd
+
+nohup bash -c "/usr/local/bin/anas_zone.sh &"
+
+exec /usr/sbin/sshd -D -E /tmp/sshd.log

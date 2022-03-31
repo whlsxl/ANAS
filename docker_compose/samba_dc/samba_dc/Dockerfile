@@ -1,32 +1,35 @@
-FROM alpine:3.14
+FROM ghcr.io/linuxserver/baseimage-ubuntu:focal
 LABEL maintainer="Hailong"
 
-ENV SAMBA_DC_ALLOW_DNS_UPDATES=secure \
-  SAMBA_DC_DNS_FORWARDER= \
-  SAMBA_DC_BIND_INTERFACES_ONLY=no \
-  SAMBA_DC_DOMAIN_ACTION=provision \
-  SAMBA_DC_DOMAIN_MASTER=auto \
-  SAMBA_DC_INTERFACES= \
-  SAMBA_DC_LOG_LEVEL=1 \
-  SAMBA_DC_MODEL=standard \
-  SAMBA_DC_NETBIOS_NAME= \
-  SAMBA_DC_REALM= \
-  SAMBA_DC_SERVER_STRING="Samba Domain Controller" \
-  TZ=UTC \
-  SAMBA_DC_WORKGROUP= \
-  LDB_MODULES_PATH=/usr/lib/samba/ldb/
+ENV DEBIAN_FRONTEND noninteractive
 
-ARG SAMBA_DC_VERSION=4.14.8-r0
+RUN sed -i "s/archive.ubuntu.com/mirrors.aliyun.com/g" /etc/apt/sources.list
+RUN apt-get update \
+  && apt-get install -y \
+  samba \
+  smbclient \
+  winbind \
+  libpam-winbind \
+  libnss-winbind \
+  krb5-kdc \
+  libpam-krb5 \
+  iproute2 \
+  dnsutils \
+  ldb-tools \
+  gettext \
+  openssh-server \
+  netcat \
+  # TODO
+  && apt-get clean \
+  && rm -rf \
+  /tmp/* \
+  /var/lib/apt/lists/* \
+  /var/tmp/* \
+  /var/log/*
 
-RUN apk add --update --no-cache ldb-tools samba-dc=$SAMBA_DC_VERSION samba-winbind-clients \
-  bind bind-libs bind-tools krb5 libcrypto1.1 libxml2 tzdata gettext
 
-COPY *.conf.j2 /root/
-COPY entrypoint.sh structure.sh /usr/local/bin/
-RUN chmod 0755 /usr/local/bin/entrypoint.sh \
-  & chmod 0755 /usr/local/bin/structure.sh
+COPY root/ /
 
-VOLUME /etc/samba /var/lib/samba
-EXPOSE 53 53/udp 88 88/udp 135 137-138/udp 139 389 389/udp 445 464 464/udp 636 3268-3269 49152-65535
-
-ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+VOLUME /var/lib/samba
+EXPOSE 88 88/udp 135 137-138/udp 139 389 389/udp 445 464 464/udp 636 3268-3269 49152-65535 \
+  2049
