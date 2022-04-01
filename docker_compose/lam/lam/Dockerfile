@@ -1,4 +1,4 @@
-FROM ldapaccountmanager/lam:7.7
+FROM ldapaccountmanager/lam:7.8
 RUN apt-get update \
   && apt-get upgrade -y \
   && apt-get install --no-install-recommends -y gettext \
