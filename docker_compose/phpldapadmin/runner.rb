@@ -3,6 +3,10 @@ module Anas
   class PhpldapadminRunner < BaseRunner
     def initialize()
       super
+    end
+
+    def self.init
+      super
       @required_envs = []
       @optional_envs = ['PHPLDAPADMIN_DOMAIN_PREFIX',]
       @default_envs = {

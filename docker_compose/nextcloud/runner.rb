@@ -3,6 +3,10 @@ module Anas
   class NextcloudRunner < BaseRunner
     def initialize()
       super
+    end
+
+    def self.init
+      super
       # TODO: sso
       @required_envs = ['MYSQL_ROOT_PASSWORD', 'NEXTCLOUD_ADMIN_PASSWORD'] # TODO
       @optional_envs = [

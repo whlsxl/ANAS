@@ -3,6 +3,10 @@ module Anas
   class MysqlRunner < BaseRunner
     def initialize()
       super
+    end
+
+    def self.init
+      super
       @required_envs = ['MYSQL_ROOT_PASSWORD']
       @dependent_mods = ['core']
     end

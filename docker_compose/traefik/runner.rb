@@ -3,6 +3,10 @@ module Anas
   class TraefikRunner < BaseRunner
     def initialize()
       super
+    end
+
+    def self.init
+      super
       @optional_envs = ['TREAFIK_BASE_PORT']
       @default_envs = {'TREAFIK_BASE_PORT' => '9000'}
       @dependent_mods = ['lego']

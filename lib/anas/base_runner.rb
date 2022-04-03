@@ -5,25 +5,25 @@ module Anas
   # Every runner should inherit BaseRunner to provide the basic functions
   class BaseRunner
     # @return [Array<String>] list of required envs
-    attr_reader :required_envs
+    def self.required_envs; @required_envs end
 
     # @return [Array<String>] optional envs is required by some functions
-    attr_reader :optional_envs
+    def self.optional_envs; @optional_envs end
 
     # @return [Hash<String, String>] the default value of env
-    attr_reader :default_envs
+    def self.default_envs; @default_envs end
 
     # @return [Array<String>] the dependency of the module, 
     #   dependency must run first
-    attr_reader :dependent_mods
+    def self.dependent_mods; @dependent_mods end
 
     # @return [String] the module name of child class
     attr_reader :mod_name
 
     # @return [String] the tmp dir path,
-    #    working_path will be "${@tmp_path}/@mod_name"
+    #    working_path will be "${@base_path}/@mod_name"
     #    default is File.join(Dir.tmpdir, "anas")
-    attr_reader :tmp_path
+    attr_reader :base_path
     
     # @return [String] copy & render erb files to temp dir
     attr_reader :working_path
@@ -37,41 +37,44 @@ module Anas
     # @return [Runner] `core` runner
     attr_accessor :core_runner
 
-    def tmp_path=(new_tmp_path)
-      @tmp_path = new_tmp_path
-      @working_path = File.join(@tmp_path, @mod_name)
-      # @prepare_path = File.join(@tmp_path, @mod_name + '.tmp')
+    def base_path=(new_base_path)
+      @base_path = new_base_path
+      @working_path = File.join(@base_path, @mod_name)
+      # @prepare_path = File.join(@base_path, @mod_name + '.tmp')
       FileUtils.mkdir_p @working_path
       # FileUtils.mkdir_p @prepare_path
     end
 
     # Runner should set the values
     def initialize()
-      @required_envs = []
-      @default_envs = {}
-      @dependent_mods = []
-      @optional_envs = []
-      @mod_name = get_mod_name
       @working_path = nil
       @is_gened_files = false
       @docker_compose_cmd = nil
-      Log.info("Init `#{@mod_name}`` class")
+      @mod_name = self.class.mod_name
+      Log.info("Init `#{@mod_name}` class")
       # ObjectSpace.define_finalizer(self, lambda do |id| 
         # FileUtils.remove_entry(@working_path)
       # end)
     end
 
+    def self.init
+      # Runner should set the values
+      @required_envs = []
+      @default_envs = {}
+      @optional_envs = []
+      @dependent_mods = []
+    end
+
     def reset_temp_path
-      FileUtils.rm_rf("#{@working_path}")
+      FileUtils.rm_rf(@working_path)
       Log.info("reset #{@mod_name} working path #{@working_path} ")
     end
 
     # get the module name by class name
     # 
     # @return [String] the module name
-    private
-    def get_mod_name
-      class_name = self.class.name
+    def self.mod_name
+      class_name = self.name
       class_name = class_name.split('::').last
       class_name.slice!('Runner')
       return class_name.underscore
@@ -113,7 +116,7 @@ module Anas
     def check_envs(envs)
       Log.info("Checking `#{@mod_name}` envs")
       missing_envs = []
-      @required_envs.each do |env|
+      self.class.required_envs.each do |env|
         Log.debug("Checking #{env}: #{envs[env] || ''}")
         unless envs.key?(env) && !envs[env].empty?
           missing_envs.append(env)
@@ -229,10 +232,12 @@ module Anas
       return false
     end
 
+    # mod don't have depend relationship, but need run after this mods
     def run_after_mods(envs)
       return []
     end
 
+    # mod don't have depend relationship, but need run before this mods
     def run_before_mods(envs)
       return []
     end

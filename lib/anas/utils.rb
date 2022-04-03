@@ -1,10 +1,11 @@
 require 'logger'
-require 'tmpdir'
 require 'yaml'
+require 'pathname'
 
 # The base class & method for A NAS
 module Anas
   class NoENVError < StandardError; end
+  class PermissionError < StandardError; end
   class LoadModuleError < StandardError; end
   class ConfigError < StandardError; end
   class NotInstalledError < StandardError; end
@@ -12,30 +13,11 @@ module Anas
 
   # Loggers, default level is `info`
   Log = Logger.new(STDOUT)
-  TmpPath = File.join(Dir.tmpdir, "anas")
-  @runner_classes = {}
+
   @@docker_compose_cmd = nil
 
   def self.docker_compose_cmd; @@docker_compose_cmd end
   def self.docker_compose_cmd= v; @@docker_compose_cmd = v end
-
-  def mod_runner!(mod)
-    return @runner_classes[mod] if @runner_classes[mod]
-    begin
-      require "#{mod}/runner"
-      runner = "Anas::#{mod.camelize}Runner".classify.new
-      runner.tmp_path = TmpPath
-      @runner_classes[mod] = runner
-      runner.docker_compose_cmd = Anas.docker_compose_cmd
-      runner.core_runner = @runner_classes['core']
-      return runner
-    rescue => exception
-      Log.error("Load module #{mod} exception: #{exception}")
-      raise LoadModuleError.new(mod)
-    end
-  end
-
-  module_function :mod_runner!
 
   class ModNode
     # @return [Array<String>] list of dependent mods
@@ -105,9 +87,25 @@ module Anas
     attr_accessor :mod_names
     attr_accessor :all_dependent_nodes
 
+    def mod_runner!(mod)
+      return @runner_classes[mod] if @runner_classes[mod]
+      begin
+        runner = mod.mod_class!.new
+        @runner_classes[mod] = runner
+        runner.docker_compose_cmd = Anas.docker_compose_cmd
+        runner.core_runner = @runner_classes['core']
+        return runner
+      rescue => exception
+        Log.error("Load module #{mod} exception: #{exception}")
+        raise LoadModuleError.new(mod)
+      end
+    end
+    
     def initialize(mod_names, envs)
       @mod_names = mod_names
       @all_dependent_nodes = {}
+      @runner_classes = {}
+      @working_path = nil
       build_dependent(mod_names, envs)
     end
 
@@ -118,12 +116,12 @@ module Anas
         dependent_node = @all_dependent_nodes[mod_name]
         return dependent_node if dependent_node
         # get mod cache
-        mod_runner = Anas.mod_runner!(mod_name)
+        mod_runner = mod_runner!(mod_name)
         # create tree node
         mod_node = ModNode.new(mod_runner)
         @all_dependent_nodes[mod_name] = mod_node
 
-        mod_runner.dependent_mods.each do |dep_mod_name|
+        mod_runner.class.dependent_mods.each do |dep_mod_name|
           # build dependent tree node
           dependent_mod_node = build_node_dependent(dep_mod_name)
           # add dependent vector
@@ -173,6 +171,17 @@ module Anas
 
       all_mods_name.each do |mod_name|
         deal_run_before_mods(mod_name)
+      end
+    end
+
+    def reset!
+      @runner_classes = {}
+    end
+
+    def set_working_path(working_path)
+      @working_path = working_path
+      @runner_classes.values.each do |runner|
+        runner.base_path = working_path
       end
     end
 
@@ -258,35 +267,38 @@ module Anas
   end
 
   class Starter
-    def initialize(options, config)
+    # init starter
+    # 
+    # @param actions [Array<String>] action need to be excute
+    # @param options [Hash<String, Any>] the config.yml file, have mods, envs child hash
+    def initialize(actions, options)
       Log.info("Log level set to #{options[:log_level]}")
       Log.level = options[:log_level]
       @options = options
-
-      if config.nil?
-        config_path = File.join(TmpPath, 'config.yml')
-        @config = YAML.load_file(config_path)
-        Log.info("Load config path #{config_path}")
-        @mods = @config['mods']
-        @config_envs = @config['envs']
-      else
-        @config = config
-        @mods = @config['mods']
-        @config_envs = @config['envs']
-      end
+      @actions = actions
 
       # start
-      @running_mods = []
-      @built_mods = []
       @dependent_tree = nil
 
+      # init_mods_class
       check_system_envs
     end
 
-    def write_config!
-      path = File.join(TmpPath, 'config.yml')
+    # def init_mods_class
+    #   names = Anas.constants.select do |name|
+    #     Anas.const_get(name).instance_of?(Class) && name.to_s.end_with?('Runner') && name != :BaseRunner
+    #   end
+    #   names.each { |n| n.init }
+    # end
+
+    def reset_runtime
+      @dependent_tree = nil
+      @config = nil
+    end
+
+    def write_config!(config, path)
       File.open(path, 'w') do |f|
-        f.write @config.to_yaml
+        f.write config.to_yaml
       end
       Log.info("Write config to #{path}")
     end
@@ -336,30 +348,6 @@ module Anas
       end
     end
 
-    # The module default envs
-    # 
-    # @param system_envs [Array<String>] list of mods
-    # @return [Hash<String, String>] default envs
-    def get_default_envs(mods)
-      @checked_default_envs = []
-      def get_default_env(mod)
-        return {} if @checked_default_envs.include?(mod)
-        default_envs = {}
-        runner = Anas.mod_runner!(mod)
-        runner.dependent_mods.each do |dmod|
-          default_envs.update(get_default_env(dmod))
-        end
-        default_envs.update(runner.default_envs)
-        @checked_default_envs.append(mod)
-        return default_envs
-      end
-      default_envs = {}
-      mods.each do |mod|
-        default_envs.update(get_default_env(mod))
-      end
-      return default_envs.value_to_string! # env value must string
-    end
-
     def cal_envs(mods, envs)
       Log.info("Calculate the envs")
       dependent_tree = @dependent_tree
@@ -397,23 +385,48 @@ module Anas
       end
     end
 
+    def get_default_envs(mods)
+      @checked_default_envs = []
+      def get_default_env(mod)
+        return {} if @checked_default_envs.include?(mod)
+        default_envs = {}
+        this_class = mod.mod_class!
+        this_class.dependent_mods.each do |dmod|
+          default_envs.update(get_default_env(dmod))
+        end
+        default_envs.update(this_class.default_envs)
+        @checked_default_envs.append(mod)
+        return default_envs
+      end
+      default_envs = {}
+      mods.each do |mod|
+        default_envs.update(get_default_env(mod))
+      end
+
+      Log.debug("Get mods default envs #{default_envs}")
+      return default_envs.value_to_string!
+    end
+
+    # The module default envs + config_envs
+    # 
+    # @param mods [Array<String>] list of mods
+    # @param config_envs [Hash<String, String>] config file content
+    # @return [Hash<String, String>] default envs
+    def get_static_envs(mods, config_envs)
+      static_envs = get_default_envs(mods).update(config_envs)
+      static_envs["ALL_MODS_NAME"] = mods.join(',')
+      return static_envs.value_to_string! # env value must string
+    end
+
     # Calculate the envs, build dependent tree, & set envs to runner
     # 
     # @return [Hash<String, String>] full envs
-    def process_envs()
-      mods = @mods
-      static_envs = get_default_envs(mods)
-      # system_envs = ENV.to_hash # don't import system envs
-      # full_envs.update(system_envs)
-      static_envs.update(@config_envs)
-      Log.debug("Build DependentTree")
-      dependent_tree = DependentTree.new(@mods, static_envs)
-      @dependent_tree = dependent_tree
-      static_envs["ALL_MODS_NAME"] = dependent_tree.all_mods_name.join(',')
+    def process_envs(mods, static_envs)
+      dependent_tree = @dependent_tree
       static_envs["USE_LDAP_MODS_NAME"] = dependent_tree.ldap_mods_name.join(',')
-      envs = cal_envs(@mods, static_envs)
+      envs = cal_envs(mods, static_envs)
       Log.debug("Calculate envs is \n #{envs}")
-      missing_envs = check_envs(@mods, envs)
+      missing_envs = check_envs(mods, envs)
       unless missing_envs.empty?
         Log.error("Missing envs\n#{missing_envs}")
         raise NoENVError.new(missing_envs)
@@ -421,39 +434,128 @@ module Anas
       return envs
     end
 
-    def start
-      envs = process_envs
-      if @options[:build]
-        build_mods(@mods, envs)
+    def sync_tmp!(tmp,release)
+      if File.directory? release
+        FileUtils.rm_rf(release)
       end
-      start_mods(@mods, envs)
-      write_config!
+      FileUtils.mv(tmp, release)
     end
 
-    def restart
-      envs = process_envs
-      stop_mods([@dependent_tree.root_node.mod_name])
-      envs = process_envs
-      if @options[:build]
-        build_mods(@mods, envs)
+    # load & check config file
+    # 
+    # @return [Hash<String, Any>], the checked config
+    def load_config(config_path)
+      if config_path.nil? || !File.file?(config_path)
+        raise ConfigError.new("No config file in #{config_path}")
       end
-      start_mods(@mods, envs)
-      write_config!
+      Log.info("Load config path #{config_path}")
+      config = YAML.load_file(config_path)
+      check_config(config)
+      return config
     end
 
-    def build
-      envs = process_envs
-      build_mods(@mods, envs)
-      write_config!
-      # mod_runner!('traefik').run(envs)
+    def check_config(config)
+      unless config['mods'] || config['mods'].is_a?(Array)
+        raise ConfigError.new("No `modules` in config file")
+      end
+
+      unless config['envs'] || config['envs'].is_a?(Hash)
+        raise ConfigError.new("No `envs` in config file")
+      end
     end
 
-    def stop
-      envs = process_envs
-      stop_mods([@dependent_tree.root_node.mod_name])
-      # mod_runner!('traefik').run(envs)
+    # if don't specify base path, use default path -  ~/.anas
+    # 
+    # @return String, the base path
+    def check_base_path(options_base)
+      base_path = File.join(Dir.home, ".anas")
+      if options_base
+        base_path = Pathname.new(Dir.pwd) + options_base
+        if base_path.file?
+          raise PermissionError.new("#{base_path} is a file name, need a directory")
+        end
+        if base_path.directory?
+          unless base_path.writable?
+            raise PermissionError.new("User don't have permission to writable in #{base_path}")
+          end
+        else
+          unless base_path.parent.writable?
+            raise PermissionError.new("User don't have permission to writable in parent dir #{base_path.parent}")
+          end
+        end
+      end
+      return base_path
     end
 
+    # Can perform 'build', 'start', 'stop', 'restart' action
+    # Default base path is ~/.anas
+    # Default config is ./config.yml
+    # 'start' can run 'build' action first
+    # 'build', must specify config.yml, working at [base]/tmp, after success, will copy to [base]/release
+    # 'start', if only run `start` or not specify config.yml, will working at [base]/release,
+    #          if run `build` first or specify config.yml, will working at [base]/tmp &
+    #          before perform start action, it will run stop action in [base]/relase first.
+    # 'restart', it will ignore the config.yml, working at [base]/relase,
+    # 'stop', it will ignore the config.yml, working at [base]/relase,
+    def run!
+      options = @options
+      actions = @actions
+      base_path = check_base_path options['base']
+      working_path = nil
+      config = nil
+      is_tmp_path = nil
+
+      if actions.include? 'build'
+        working_path = File.join(base_path, "tmp")
+        path = options[:config]
+        path || path = './config.yml'
+        config = load_config(path)
+        is_tmp_path = true
+      elsif actions.include? 'start' && options[:config]
+        working_path = File.join(base_path, "tmp")
+        config = load_config(options[:config])
+        is_tmp_path = true
+      else 
+        working_path = File.join(base_path, "release")
+        config = load_config(File.join(working_path, 'config.yml'))
+        is_tmp_path = false
+      end
+      Log.info("working_path is #{working_path}")
+      mods = config['mods']
+      Log.info("Config mods #{mods}")
+      config_envs = config['envs']
+      Log.info("Config envs #{config_envs}")
+      static_envs = get_static_envs(mods, config_envs)
+
+      Log.debug("Build DependentTree")
+      dependent_tree = DependentTree.new(mods, static_envs)
+      @dependent_tree = dependent_tree
+      dependent_tree.set_working_path(working_path)
+
+      envs = process_envs(mods, static_envs)
+
+      if actions.include? 'build'
+        build_mods(mods, envs)
+      end
+
+      if actions.include? 'start'
+        # stop the old config first
+        if is_tmp_path && File.directory?(File.join(base_path, "release"))
+          starter = Anas::Starter.new(['stop'], options)
+          starter.run!
+        end
+        start_mods(mods, envs)
+      elsif actions.include? 'restart'
+        stop_mods([dependent_tree.root_node.mod_name])
+        start_mods(mods, envs)
+      elsif actions.include? 'stop'
+        stop_mods([dependent_tree.root_node.mod_name])
+      end
+      if is_tmp_path
+        write_config!(config, File.join(working_path, 'config.yml'))
+        sync_tmp!(File.join(base_path, "tmp"), File.join(base_path, "release"))
+      end
+    end
 
   end
 end

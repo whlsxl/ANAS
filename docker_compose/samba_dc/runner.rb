@@ -2,6 +2,10 @@ module Anas
   class SambaDcRunner < BaseRunner
     def initialize()
       super
+    end
+
+    def self.init
+      super
       @required_envs = ['SAMBA_DC_ADMIN_PASSWORD']
       @optional_envs = ['SAMBA_DC_REALM', 'SAMBA_DC_WORKGROUP', 
         'SAMBA_DC_SERVER_STRING', 'SAMBA_DC_NETBIOS_NAME', 'SAMBA_DC_INTERFACES',
@@ -53,6 +57,7 @@ module Anas
 
     def render_files!(envs)
       file_path = File.expand_path("samba_dc/root/root/.ssh/authorized_keys", @working_path)
+      FileUtils.mkdir_p(File.dirname(file_path))
       File.open(file_path, 'w') do |file|
         file.write envs['SSH_RSA_PRIVATE']
       end

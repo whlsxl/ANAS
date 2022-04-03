@@ -3,6 +3,10 @@ module Anas
   class LegoRunner < BaseRunner
     def initialize()
       super
+    end
+
+    def self.init
+      super
       @required_envs = ['LEGO_DNS_PROVIDER']
       @optional_envs = ['LEGO_EMAIL', 'LEGO_DNS_SERVER', 'LEGO_DATA_PATH']
       @default_envs = {'LEGO_DNS_SERVER' => '223.5.5.5'}

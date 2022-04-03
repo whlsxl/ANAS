@@ -4,12 +4,15 @@ module Anas
   class BindRunner < BaseRunner
     def initialize()
       super
+    end
+
+    def self.init
+      super
       @required_envs = []
       @optional_envs = ['BIND_DEBUG', 'BIND_DNS_FORWARDER']
       @default_envs = {'BIND_DEBUG' => 'true'}
       @dependent_mods = ['core']
     end
-
     def cal_envs(envs)
       new_envs = envs
       unless envs.has_key?('BIND_DNS_FORWARDER')

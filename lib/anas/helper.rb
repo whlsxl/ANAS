@@ -43,6 +43,21 @@ class String
     Object.const_get(self)
   end
 
+  def mod_class!
+    require "#{self}/runner"
+    mod = self.mod_class
+    mod.init
+    return mod
+  end
+
+  def mod_class
+    return "Anas::#{self.camelize}Runner".classify
+  end
+
+  def init_mod_class
+    "Anas::#{self.camelize}Runner".classify.init
+  end
+
   def underscore
     self.gsub(/::/, '/').
     gsub(/([A-Z]+)([A-Z][a-z])/,'\1_\2').

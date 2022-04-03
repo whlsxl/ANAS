@@ -3,6 +3,10 @@ module Anas
   class AdminerRunner < BaseRunner
     def initialize()
       super
+    end
+
+    def self.init
+      super
       @required_envs = []
       @optional_envs = ['ADMINER_DOMAIN_PREFIX', 'ADMINER_DESIGN']
       @default_envs = {

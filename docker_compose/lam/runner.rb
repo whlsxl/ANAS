@@ -3,6 +3,10 @@ module Anas
   class LamRunner < BaseRunner
     def initialize()
       super
+    end
+
+    def self.init
+      super
       @required_envs = ['LAM_ADMIN_PASSWORD']
       @optional_envs = [
         'LAM_DOMAIN_PREFIX', 'LAM_ADMIN_PASSWORD', 'LAM_LANGUAGE'

@@ -3,6 +3,10 @@ module Anas
   class RedisRunner < BaseRunner
     def initialize()
       super
+    end
+
+    def self.init
+      super
       @required_envs = []
       @dependent_mods = ['core'] # TODO password
     end

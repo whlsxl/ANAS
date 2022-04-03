@@ -20,27 +20,30 @@ module Anas
       program :help, 'Author', 'Hailong Wang <whlsxl+g@gmail.com>'
       program :help, 'GitHub', 'TODO'
 
+      global_option('-b', '--base FILE', 'The anas base working path, storage docker compose, version lock & config file, default: ~/.anas')
       global_option('--verbose')
-      global_option('-c', '--config FILE', 'Load config yml, default: ./config.yml')
 
       command :start do |c|
         c.syntax = 'anas start [options]'
         c.summary = ''
         c.description = ''
         c.example 'description', 'Start modules'
-        c.option '-b', '--build', 'Build before start'
+        c.option '--build', 'Build before start'
+        c.option '-c', '--config FILE', 'Load config yml, default: ./config.yml'
         c.action do |args, options|
           options.default :build => false
+          actions = ['start']
           options_new = options.__hash__
+          if options_new[:build]
+            actions.append('build')
+          end
           if options_new[:verbose] == true then
             options_new[:log_level] = Logger::DEBUG
           else 
             options_new[:log_level] = Logger::WARN
           end
-          config = load_config_file(options_new[:file])
-
-          starter = Anas::Starter.new(options_new, config)
-          starter.start
+          starter = Anas::Starter.new(actions, options_new)
+          starter.run!
         end
       end
 
@@ -49,22 +52,21 @@ module Anas
         c.summary = ''
         c.description = ''
         c.example 'description', 'Restart modules'
-        c.option '-b', '--build', 'Build before start'
         c.action do |args, options|
           options.default :build => false
+          actions = ['restart']
           options_new = options.__hash__
           if options_new[:verbose] == true then
             options_new[:log_level] = Logger::DEBUG
           else 
             options_new[:log_level] = Logger::WARN
           end
-          config = nil
-          unless options_new[:file].nil?
-            config = load_config_file(options_new[:file])
-          end
+          # unless options_new[:file].nil?
+          #   config = load_config_file(options_new[:file])
+          # end
 
-          starter = Anas::Starter.new(options_new, config)
-          starter.restart
+          starter = Anas::Starter.new(actions, options_new)
+          starter.run!
         end
       end
 
@@ -73,17 +75,18 @@ module Anas
         c.summary = ''
         c.description = 'Build all modules'
         c.example 'description', 'Build all modules'
+        c.option '-c', '--config FILE', 'Load config yml, default: ./config.yml'
         c.action do |args, options|
-          options.default :build => false
+          # options.default :config => 'config.yml'
           options_new = options.__hash__
+          actions = ['build']
           if options_new[:verbose] == true then
             options_new[:log_level] = Logger::DEBUG
           else 
             options_new[:log_level] = Logger::WARN
           end
-          config = load_config_file(options[:file])
-          starter = Anas::Starter.new(options_new, config)
-          starter.build
+          starter = Anas::Starter.new(actions, options_new)
+          starter.run!
         end
       end
 
@@ -95,18 +98,18 @@ module Anas
         c.option '-a', '--all', 'Stop all modules'
         c.action do |args, options|
           options_new = options.__hash__
+          actions = ['stop']
           if options_new[:verbose] == true then
             options_new[:log_level] = Logger::DEBUG
           else 
             options_new[:log_level] = Logger::WARN
           end
-          config = nil
-          unless options_new[:file].nil?
-            config = load_config_file(options_new[:file])
-          end
+          # unless options_new[:file].nil?
+          #   config = load_config_file(options_new[:file])
+          # end
 
-          starter = Anas::Starter.new(options_new, config)
-          starter.stop
+          starter = Anas::Starter.new(actions, options_new)
+          starter.run!
         end
       end
 
@@ -126,24 +129,6 @@ module Anas
       run!
     end
 
-    def load_config_file(file)
-      file || file = 'config.yml'
-      config = YAML.load_file(file)
-      check_config(config)
-      return config
-    end
-
-    def check_config(config)
-      unless config['mods'] || config['mods'].is_a?(Array)
-        Log.error("No `modules` in #{file}")
-        raise ConfigError
-      end
-
-      unless config['envs'] || config['envs'].is_a?(Hash)
-        Log.error("No `envs` in #{file}")
-        raise ConfigError
-      end
-    end
   end
 end
 # Anas.new.run if $0 == __FILE__
