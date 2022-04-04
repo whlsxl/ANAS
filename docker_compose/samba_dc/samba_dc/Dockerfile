@@ -3,7 +3,10 @@ LABEL maintainer="Hailong"
 
 ENV DEBIAN_FRONTEND noninteractive
 
-RUN sed -i "s/archive.ubuntu.com/mirrors.aliyun.com/g" /etc/apt/sources.list
+ARG CHINESE_SPEEDUP
+RUN if [ "$CHINESE_SPEEDUP" = "true" ] ; then  \
+  sed -i "s/archive.ubuntu.com/mirrors.aliyun.com/g" /etc/apt/sources.list; \
+  fi
 RUN apt-get update \
   && apt-get install -y \
   samba \
@@ -19,14 +22,12 @@ RUN apt-get update \
   gettext \
   openssh-server \
   netcat \
-  # TODO
   && apt-get clean \
   && rm -rf \
   /tmp/* \
   /var/lib/apt/lists/* \
   /var/tmp/* \
   /var/log/*
-
 
 COPY root/ /
 

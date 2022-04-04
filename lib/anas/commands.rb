@@ -124,8 +124,6 @@ module Anas
       #   end
       # end
 
-      default_command :start
-
       run!
     end
 

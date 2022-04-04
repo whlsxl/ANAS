@@ -3,7 +3,10 @@ version: "3.5"
 services:
   samba_dc:
     container_name: ${CONTAINER_PREFIX}${MODULE_NAME}
-    build: ./${MODULE_NAME}
+    build: 
+      context: ./${MODULE_NAME}
+      args:
+        - CHINESE_SPEEDUP
     image: ${IMAGE_PREFIX}${MODULE_NAME}:latest
     restart: unless-stopped
     network_mode: host

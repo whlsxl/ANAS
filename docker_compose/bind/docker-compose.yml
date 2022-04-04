@@ -3,7 +3,10 @@ version: "3.5"
 services:
   bind:
     container_name: ${CONTAINER_PREFIX}${MODULE_NAME}
-    build: ./${MODULE_NAME}
+    build: 
+      context: ./${MODULE_NAME}
+      args:
+        - CHINESE_SPEEDUP
     image: ${IMAGE_PREFIX}${MODULE_NAME}:latest
     dns_search: ${BASE_DOMAIN_NAME}
     restart: unless-stopped

@@ -2,8 +2,11 @@ FROM ghcr.io/linuxserver/baseimage-ubuntu:focal
 LABEL maintainer="Hailong"
 
 ENV DEBIAN_FRONTEND noninteractive
+ARG CHINESE_SPEEDUP
 
-RUN sed -i "s/archive.ubuntu.com/mirrors.aliyun.com/g" /etc/apt/sources.list
+RUN if [ "$CHINESE_SPEEDUP" = "true" ] ; then  \
+  sed -i "s/archive.ubuntu.com/mirrors.aliyun.com/g" /etc/apt/sources.list; \
+  fi
 RUN apt-get update \
   && apt-get install -y \
   samba \
