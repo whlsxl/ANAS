@@ -5,13 +5,6 @@ export SAMBA_DC_DOMAIN_MASTER="${SAMBA_DC_DOMAIN_MASTER:-auto}"
 export SAMBA_DC_BIND_INTERFACES_ONLY="${SAMBA_DC_BIND_INTERFACES_ONLY:-No}"
 export SAMBA_DC_SERVER_STRING="${SAMBA_DC_SERVER_STRING:-'Samba Domain Controller'}"
 
-if [ -z "$SAMBA_DC_NETBIOS_NAME" ]; then
-  export SAMBA_DC_NETBIOS_NAME=$(hostname -s | tr [a-z] [A-Z])
-else
-  export SAMBA_DC_NETBIOS_NAME=$(echo $SAMBA_DC_NETBIOS_NAME | tr [a-z] [A-Z])
-fi
-export SAMBA_DC_REALM=$(echo "$SAMBA_DC_REALM" | tr [A-Z] [a-z])
-
 if [ ! -f /etc/timezone ] && [ ! -z "$TZ" ]; then
   echo 'Set timezone'
   cp /usr/share/zoneinfo/$TZ /etc/localtime
@@ -55,7 +48,7 @@ fi
 cp /var/lib/samba/private/krb5.conf /etc/krb5.conf
 
 echo "Creating /etc/samba/smb.conf ..."
-envsubst < /root/smb.conf.j2 > /etc/samba/smb.conf 
+envsubst < /root/smb.conf.j2 > /etc/samba/smb.conf
 
 mkdir -p /var/log/samba/cores
 chmod 700 /var/log/samba/cores

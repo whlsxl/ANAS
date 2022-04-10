@@ -3,11 +3,11 @@ acl local-networks {
     0.0.0.0/0;
 };
 
-include "/etc/bind/rndc.key";
+# include "/etc/bind/rndc.key";
 
-controls {
-   inet 0.0.0.0  port 953 allow { 0.0.0.0; } keys { "rndc-key"; };
-};
+# controls {
+#    inet 0.0.0.0  port 953 allow { 0.0.0.0; } keys { "rndc-key"; };
+# };
 
 # Global Configuration Options
 options {
@@ -67,6 +67,6 @@ zone "0.0.127.in-addr.arpa" {
 };
 
 dlz "AD DNS Zone" {
-    database "dlopen /usr/lib/x86_64-linux-gnu/samba/bind9/dlz_bind9_16.so";
+    database "dlopen /usr/lib/x86_64-linux-gnu/samba/bind9/dlz_bind9_16.so ${DLZ_DEBUG}";
 };
 

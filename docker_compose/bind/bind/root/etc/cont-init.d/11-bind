@@ -57,6 +57,9 @@ waiting_ssh() {
     sleep 2
   done
 }
+if [ "$BIND_DEBUG" == "true" ]; then
+  export DLZ_DEBUG="-d 5"
+fi
 
 envsubst < /etc/bind/named.conf.j3 > /etc/bind/named.conf
 

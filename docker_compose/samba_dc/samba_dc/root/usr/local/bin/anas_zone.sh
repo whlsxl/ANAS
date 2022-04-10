@@ -26,11 +26,14 @@ fi
 waiting_dns
 
 # update *.$BASE_DOMAIN_NAME to host ip
-samba-tool domain exportkeytab /tmp/dns.keytab
-kinit -k -t /tmp/dns.keytab $SAMBA_DC_ADMIN_NAME@$SAMBA_DC_REALM
+hostname=$(hostname -s)
+echo "exec \"kinit -k -t /var/lib/samba/private/dns.keytab dns-$hostname\""
+kinit -k -t /var/lib/samba/private/dns.keytab dns-$hostname
 echo "
   server 127.0.0.1
   update add *.$BASE_DOMAIN_NAME 3600 IN A $HOST_IP
   send
   quit
   " | $nsupdate_command
+
+echo "Wildcard add completed"

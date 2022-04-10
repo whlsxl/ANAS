@@ -27,13 +27,26 @@ module Anas
       new_envs = envs
       ensure_env!(envs, 'BASE_DOMAIN_NAME')
       new_envs['SAMBA_DC_DOMAIN_NAME'] = envs['BASE_DOMAIN_NAME']
-      new_envs['SAMBA_DC_REALM'] = envs['BASE_DOMAIN_NAME'].to_s.upcase unless envs.has_key?('SAMBA_DC_REALM')
+      if envs.has_key?('SAMBA_DC_REALM')
+        new_envs['SAMBA_DC_REALM'] = envs['SAMBA_DC_REALM'].to_s.upcase
+      else
+        new_envs['SAMBA_DC_REALM'] = envs['BASE_DOMAIN_NAME'].to_s.upcase
+      end
+      if envs.has_key?('SAMBA_DC_NETBIOS_NAME')
+        new_envs['SAMBA_DC_NETBIOS_NAME'] = envs['SAMBA_DC_NETBIOS_NAME'].to_s.upcase
+      else
+        hostname = %x( hostname -s )
+        new_envs['SAMBA_DC_NETBIOS_NAME'] = hostname.strip.to_s.upcase
+      end
+      new_envs['SAMBA_DC_DC_NAME'] = new_envs['SAMBA_DC_NETBIOS_NAME'].to_s.downcase
+      new_envs['SAMBA_DC_DC_DOMAIN_NAME'] = "#{new_envs['SAMBA_DC_DC_NAME']}.#{new_envs['SAMBA_DC_DOMAIN_NAME']}"
       new_envs['SAMBA_DC_ADMIN_PASSWORD'] = envs['DEFAULT_ROOT_PASSWORD'] unless envs.has_key?('SAMBA_DC_ADMIN_PASSWORD')
-      new_envs['SAMBA_DC_SERVER_URL'] = "ldaps://#{envs['BASE_DOMAIN_NAME']}" unless envs.has_key?('SAMBA_DC_SERVER_FULL_URL')
-      new_envs['SAMBA_DC_PORT'] = "636"
-      new_envs['SAMBA_DC_SERVER_URL_PORT'] = "#{envs['SAMBA_DC_SERVER_URL']}:#{envs['SAMBA_DC_PORT']}"
+      new_envs['SAMBA_DC_LDAPS_SERVER_URL'] = "ldaps://#{envs['BASE_DOMAIN_NAME']}" unless envs.has_key?('SAMBA_DC_SERVER_FULL_URL')
+      new_envs['SAMBA_DC_LDAPS_PORT'] = "636"
+      new_envs['SAMBA_DC_LDAPS_SERVER_URL_PORT'] = "#{envs['SAMBA_DC_LDAPS_SERVER_URL']}:#{envs['SAMBA_DC_LDAPS_PORT']}"
       domain = new_envs['SAMBA_DC_DOMAIN_NAME']
       new_envs['SAMBA_DC_WORKGROUP'] = domain.split('.').first unless envs.has_key?('SAMBA_DC_WORKGROUP')
+      new_envs['SAMBA_DC_WORKGROUP'] = new_envs['SAMBA_DC_WORKGROUP'].to_s.upcase
       new_envs['SAMBA_DC_BASE_DN'] = 'DC=' + domain.split('.').join(',DC=')
       new_envs['SAMBA_DC_BASE_COMPUTERS_DN'] = "CN=Computers,#{new_envs['SAMBA_DC_BASE_DN']}"
       new_envs['SAMBA_DC_BASE_GROUPS_DN'] = "OU=Role,OU=Groups,#{new_envs['SAMBA_DC_BASE_DN']}"
