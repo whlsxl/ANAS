@@ -38,6 +38,7 @@ module Anas
     attr_accessor :core_runner
 
     def base_path=(new_base_path)
+      Log.debug("#{@mod_name} set base_path #{new_base_path}")
       @base_path = new_base_path
       @working_path = File.join(@base_path, @mod_name)
       # @prepare_path = File.join(@base_path, @mod_name + '.tmp')

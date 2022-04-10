@@ -441,6 +441,10 @@ module Anas
       FileUtils.mv(tmp, release)
     end
 
+    def clean_tmp!(tmp)
+      FileUtils.rm_rf(tmp)
+    end
+
     # load & check config file
     # 
     # @return [Hash<String, Any>], the checked config
@@ -504,22 +508,30 @@ module Anas
       working_path = nil
       config = nil
       is_tmp_path = nil
+      tmp_path = File.join(base_path, "tmp")
+      release_path = File.join(base_path, "release")
 
       if actions.include? 'build'
-        working_path = File.join(base_path, "tmp")
+        working_path = tmp_path
         path = options[:config]
         path || path = './config.yml'
         config = load_config(path)
         is_tmp_path = true
       elsif actions.include? 'start' && options[:config]
-        working_path = File.join(base_path, "tmp")
+        working_path = tmp_path
         config = load_config(options[:config])
         is_tmp_path = true
       else 
-        working_path = File.join(base_path, "release")
+        working_path = release_path
         config = load_config(File.join(working_path, 'config.yml'))
         is_tmp_path = false
       end
+
+      if is_tmp_path
+        Log.info("rm tmp #{tmp_path}")
+        clean_tmp!(File.join(base_path, "tmp"))
+      end
+
       Log.info("working_path is #{working_path}")
       mods = config['mods']
       Log.info("Config mods #{mods}")
@@ -540,7 +552,7 @@ module Anas
 
       if actions.include? 'start'
         # stop the old config first
-        if is_tmp_path && File.directory?(File.join(base_path, "release"))
+        if is_tmp_path && File.directory?(release_path)
           starter = Anas::Starter.new(['stop'], options)
           starter.run!
         end
@@ -553,7 +565,7 @@ module Anas
       end
       if is_tmp_path
         write_config!(config, File.join(working_path, 'config.yml'))
-        sync_tmp!(File.join(base_path, "tmp"), File.join(base_path, "release"))
+        sync_tmp!(File.join(base_path, "tmp"), release_path)
       end
     end
 
