@@ -15,6 +15,8 @@ services:
     environment:
       - "LAM_SKIP_PRECONFIGURE=true"
       - "DEBUG=true"
+    env_file:
+      - .env
     networks:
       - traefik
 
