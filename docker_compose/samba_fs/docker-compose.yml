@@ -1,0 +1,33 @@
+version: "3.5"
+
+services:
+  samba_fs:
+    container_name: ${CONTAINER_PREFIX}${MODULE_NAME}
+    build:
+      context: ./${MODULE_NAME}
+      args:
+        - CHINESE_SPEEDUP
+    image: ${IMAGE_PREFIX}${MODULE_NAME}:latest
+    restart: unless-stopped
+    network_mode: host
+    hostname: ${SAMBA_FS_HOSTNAME}
+    cap_add:
+      - CAP_NET_ADMIN
+    env_file:
+      - .env
+    volumes:
+      - "${LEGO_CERTS_PATH}:/certs:ro"
+    # ports:
+    #   - 88:88
+    #   - 88:88/udp
+    #   - 135:135
+    #   - 137-138:137-138/udp
+    #   - 139:139
+    #   - 389:389
+    #   - 389:389/udp
+    #   - 445:445
+    #   - 464:464
+    #   - 464:464/udp
+    #   - 636:636
+    #   - 3268-3269:3268-3269
+    #   - 49152-65535

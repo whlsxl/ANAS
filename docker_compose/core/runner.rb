@@ -14,7 +14,8 @@ module Anas
       @default_envs = {'DATA_PATH' => '~/data', 'TZ' => 'Asia/Hong_Kong', 
         'CONTAINER_PREFIX' => 'anas_', 'IMAGE_PREFIX' => 'anas_',
         'PUID' => 1000, 'PGID' => 1000, 'BASICAUTH_USER' => 'admin',
-        'DEFAULT_LANGUAGE' => 'zh', 'CHINESE_SPEEDUP' => 'false'
+        'DEFAULT_LANGUAGE' => 'zh', 'CHINESE_SPEEDUP' => 'false',
+        'USE_DEFAULT_DOMAIN' => 'yes'
       }
       @default_envs['HOST_IP'] =  %x( ip addr show | grep -E '^\s*inet' | grep -m1 global | awk '{ print $2 }' | sed 's|/.*||' )
       @default_envs['GATEWAY_IP'] =  %x( /sbin/ip route | awk '/default/ { print $3 }' )
@@ -23,7 +24,8 @@ module Anas
       @required_envs = ['BASE_DOMAIN_NAME', 'EMAIL']
       @optional_envs = ['DATA_PATH', 'TZ', 'DEFAULT_ROOT_PASSWORD', 'CONTAINER_PREFIX',
         'IMAGE_PREFIX', 'DEFAULT_SERVICE_ROOT_PASSWORD', 'PUID', 'PGID',
-        'BASICAUTH_USER', 'BASICAUTH_PASSWD', 'DEFAULT_LANGUAGE', 'CHINESE_SPEEDUP'
+        'BASICAUTH_USER', 'BASICAUTH_PASSWD', 'DEFAULT_LANGUAGE', 'CHINESE_SPEEDUP',
+        'USE_DEFAULT_DOMAIN'
       ]
       @dependent_mods = []
     end
