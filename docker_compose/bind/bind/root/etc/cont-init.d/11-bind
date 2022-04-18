@@ -3,6 +3,10 @@
 ip=$(ip addr show | grep -E '^\s*inet' | grep -m1 global | awk '{ print $2 }' | sed 's|/.*||')
 export HOST_IP="${HOST_IP:-$ip}"
 
+echo "export exec_user=\"abc\"" > /usr/local/bin/envs.sh
+chmod +x /usr/local/bin/envs.sh
+source /usr/local/bin/envs.sh
+
 mount_sshfs() { # $1 from location, $2 to location
   if [ ! -d "$2" ]; then
     echo "Create $2"
@@ -67,9 +71,9 @@ chmod 640 /root
 chmod 700 /root/.ssh/
 chmod 600 /root/.ssh/id_rsa
 mkdir -p /run/named/
-chown root:abc /run/named/
-chown root:abc /etc/bind/named.conf
-chown abc:abc /etc/bind/rndc.key
+chown root:$exec_user /run/named/
+chown root:$exec_user /etc/bind/named.conf
+chown $exec_user:$exec_user /etc/bind/rndc.key
 
 if [[ "$ALL_MODS_NAME" == *"samba_dc"* ]]; then
   waiting_ssh
@@ -79,16 +83,16 @@ if [[ "$ALL_MODS_NAME" == *"samba_dc"* ]]; then
   done
   mount_sshfs "/etc" /tmp/etc
 
-  chown -R abc:abc /var/bind/
+  chown -R $exec_user:$exec_user /var/bind/
 
   # bind.keys
-  chown abc:abc /etc/bind/bind.keys
+  chown $exec_user:$exec_user /etc/bind/bind.keys
   chmod 600 /etc/bind/bind.keys
 
   # krb5.conf
   waiting_file "/tmp/etc/krb5.conf"
   cp --remove-destination /tmp/etc/krb5.conf /etc/krb5.conf
-  chown abc:abc /etc/krb5.conf
+  chown $exec_user:$exec_user /etc/krb5.conf
   chmod 644 /etc/krb5.conf
 
   # ln
@@ -96,13 +100,13 @@ if [[ "$ALL_MODS_NAME" == *"samba_dc"* ]]; then
   cp -R /tmp/etc/samba /etc/
 
   # bind-dns
-  chown abc:abc /var/lib/samba/bind-dns/
+  chown $exec_user:$exec_user /var/lib/samba/bind-dns/
   chmod 770 /var/lib/samba/bind-dns/
 
-  chown abc:abc /var/lib/samba/bind-dns/named.conf
+  chown $exec_user:$exec_user /var/lib/samba/bind-dns/named.conf
   # dns.keytab
   chmod 640 /var/lib/samba/private/dns.keytab
-  chown abc:abc /var/lib/samba/private/dns.keytab
+  chown $exec_user:$exec_user /var/lib/samba/private/dns.keytab
 fi
 
 # exec samba-tool dns zonecreate whls 199.168.192.in-addr.arpa -U admin
