@@ -3,11 +3,11 @@ acl local-networks {
     0.0.0.0/0;
 };
 
-# include "/etc/bind/rndc.key";
-
-# controls {
-#    inet 0.0.0.0  port 953 allow { 0.0.0.0; } keys { "rndc-key"; };
-# };
+include "/etc/bind/rndc.key";
+controls {
+  inet 127.0.0.1 port 953 
+               allow { 127.0.0.1; } keys { "rndc-key"; };
+};
 
 # Global Configuration Options
 options {
@@ -18,6 +18,7 @@ options {
     notify no;
     empty-zones-enable no;
     pid-file "/var/run/named/named.pid";
+    dump-file "/tmp/named_dump.db";
 
     dnssec-validation no;
     
@@ -44,6 +45,7 @@ options {
         none;
     };
     tkey-gssapi-keytab "/var/lib/samba/bind-dns/dns.keytab";
+    # tkey-gssapi-keytab "/var/lib/samba/private/dns.keytab";
     minimal-responses yes;
  };
 

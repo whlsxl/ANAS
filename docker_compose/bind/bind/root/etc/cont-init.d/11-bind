@@ -12,7 +12,7 @@ mount_sshfs() { # $1 from location, $2 to location
     echo "Create $2"
     mkdir -p $2
   fi
-  chown abc:abc $2
+  chown $exec_user:$exec_user $2
   while : 
   do
     echo "Mounting $2 to $1"
@@ -73,7 +73,9 @@ chmod 600 /root/.ssh/id_rsa
 mkdir -p /run/named/
 chown root:$exec_user /run/named/
 chown root:$exec_user /etc/bind/named.conf
+# chown root:$exec_user /etc/bind/rndc.conf
 chown $exec_user:$exec_user /etc/bind/rndc.key
+chmod 644 /etc/bind/rndc.key
 
 if [[ "$ALL_MODS_NAME" == *"samba_dc"* ]]; then
   waiting_ssh
@@ -84,6 +86,7 @@ if [[ "$ALL_MODS_NAME" == *"samba_dc"* ]]; then
   mount_sshfs "/etc" /tmp/etc
 
   chown -R $exec_user:$exec_user /var/bind/
+  chmod -R 744 /var/bind/
 
   # bind.keys
   chown $exec_user:$exec_user /etc/bind/bind.keys
@@ -94,6 +97,9 @@ if [[ "$ALL_MODS_NAME" == *"samba_dc"* ]]; then
   cp --remove-destination /tmp/etc/krb5.conf /etc/krb5.conf
   chown $exec_user:$exec_user /etc/krb5.conf
   chmod 644 /etc/krb5.conf
+
+  # run
+  chown $exec_user:$exec_user /var/run/named/
 
   # ln
   rm -rf /etc/samba
