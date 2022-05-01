@@ -18,6 +18,7 @@ module Anas
       unless envs.has_key?('BIND_DNS_FORWARDER')
         new_envs['BIND_DNS_FORWARDER'] = "#{envs['DNS_SERVER'].split(' ').join(';')};"
       end
+      new_envs['BIND_HOST_IP'] = envs['HOST_IP']
       return new_envs
     end
 

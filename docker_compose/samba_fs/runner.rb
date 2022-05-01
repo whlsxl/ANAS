@@ -8,7 +8,12 @@ module Anas
 
     def self.init
       super
-      @required_envs = []
+      @required_envs = ['SAMBA_DC_REALM', 'SAMBA_DC_DC_DOMAIN_NAME', 
+        'SAMBA_DC_DOMAIN_NAME', 'SAMBA_DC_WORKGROUP',
+        'SAMBA_DC_ADMIN_NAME', 'SAMBA_DC_ADMIN_PASSWORD',
+        # SAMBA_FS
+        'SHARE_DIR_NAME',
+      ]
       @optional_envs = [ 'SAMBA_FS_INTERFACES',
         'SAMBA_FS_HOSTNAME', 'SAMBA_FS_USE_DEFAULT_DOMAIN',
         'SAMBA_FS_LOG_LEVEL', 'SAMBA_FS_WSDD_LOG_LEVEL'
@@ -22,12 +27,16 @@ module Anas
     def cal_envs(envs)
       new_envs = envs
       new_envs['SAMBA_FS_USE_DEFAULT_DOMAIN'] = envs['USE_DEFAULT_DOMAIN'] unless envs.has_key?('SAMBA_FS_USE_DEFAULT_DOMAIN')
-      new_envs['SAMBA_FS_NETBIOS_NAME'] = envs['SAMBA_FS_HOSTNAME'] unless envs.has_key?('SAMBA_FS_NETBIOS_NAME')
+      new_envs['SAMBA_FS_NETBIOS_NAME'] = envs['SAMBA_FS_HOSTNAME'].upcase unless envs.has_key?('SAMBA_FS_NETBIOS_NAME')
       return new_envs
     end
 
     def run_after_mods(envs)
       return ['samba_dc']
+    end
+
+    def use_host_lan?
+      return 'required'
     end
   end
 end

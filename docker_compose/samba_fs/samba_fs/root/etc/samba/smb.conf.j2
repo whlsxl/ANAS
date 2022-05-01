@@ -37,7 +37,7 @@
   preferred master = no
   host msdfs = yes
 
-  vfs objects = acl_xattr
+  vfs objects = acl_xattr ${GLOBAL_RECYCLE}
   map acl inherit = Yes
 
   usershare allow guests = Yes
@@ -58,15 +58,19 @@
 
   # Docker Envs global config options
 
-[homes]
-  path=/shares/homes/%U
-  guest ok = no
-  read only = no
-  browseable = no
-  root preexec = /usr/local/bin/samba_create_user_dir.sh /shares/homes %U
+	admin users = @${SAMBA_DC_WORKGROUP}\Domain Admins, @${SAMBA_DC_WORKGROUP}\Enterprise Admins, ${SAMBA_DC_ADMIN_NAME}
 
-[Alice Share]
-  path=/shares/alice
-  guest ok = no
-  read only = no
-  browseable = yes
+[Home]
+  comment = "User's personal files"
+  path = /${USERDATA_NAME}/Home/%U
+  guest ok = No
+  read only = No
+  browseable = Yes
+  root preexec = /usr/local/bin/samba_create_user_dir.sh /${USERDATA_NAME}/Home %U
+
+[${SHARE_DIR_NAME}]
+  comment = "User shares"
+  path = /${USERDATA_NAME}/${SHARE_DIR_NAME}
+  guest ok = ${SHARE_GUEST_OK}
+  read only = No
+  browseable = Yes

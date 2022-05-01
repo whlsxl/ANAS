@@ -60,6 +60,13 @@ if [ -z "$SAMBA_FS_INTERFACES" ]; then # bind interfaces empty, use default rout
   export SAMBA_FS_INTERFACES=$(echo $(/sbin/ip route | awk '/default/ { print $5 }'))
 fi
 
+# Samba FS
+if [ "$SAMBA_FS_RECYCLE_ENABLE" == "Yes" ]; then
+  export GLOBAL_RECYCLE="recycle"
+else
+  export GLOBAL_RECYCLE=""
+fi
+
 envsubst < /etc/samba/smb.conf.j2 > /etc/samba/smb.conf 
 envsubst < /etc/samba/smbusers.j2 > /etc/samba/smbusers
 envsubst < /etc/krb5.conf.j2 > /etc/krb5.conf
@@ -81,8 +88,22 @@ export HOST_IP="${HOST_IP:-$ip}"
 
 echo "$HOST_IP  $SAMBA_FS_HOSTNAME.$SAMBA_DC_DOMAIN_NAME  $SAMBA_FS_HOSTNAME" >> /etc/hosts
 
+# dns
+echo "Setting DNS resolv.conf"
+: > /etc/resolv.conf
+echo "nameserver $BIND_HOST_IP" >> /etc/resolv.conf
+for dns in $(echo $DNS_SERVER | tr " " "\n")
+do
+  echo "nameserver $dns" >> /etc/resolv.conf
+done
+echo "search $SAMBA_DC_DNS_SEARCH" >> /etc/resolv.conf
+
 join_domain
 
 mkdir -p /shares/homes/
 mkdir -p /shares/alice/
 mkdir -p /var/log/samba/
+
+echo "Create share"
+mkdir -p /$USERDATA_NAME/$SHARE_DIR_NAME
+mkdir -p /$USERDATA_NAME/Home

@@ -1,8 +1,5 @@
 #!/usr/bin/with-contenv bash
 
-ip=$(ip addr show | grep -E '^\s*inet' | grep -m1 global | awk '{ print $2 }' | sed 's|/.*||')
-export HOST_IP="${HOST_IP:-$ip}"
-
 echo "export exec_user=\"abc\"" > /usr/local/bin/envs.sh
 chmod +x /usr/local/bin/envs.sh
 source /usr/local/bin/envs.sh
