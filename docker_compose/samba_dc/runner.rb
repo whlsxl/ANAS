@@ -6,13 +6,14 @@ module Anas
 
     def self.init
       super
-      @required_envs = ['SAMBA_DC_ADMIN_PASSWORD']
+      @required_envs = ['SAMBA_DC_ADMIN_PASSWORD',
+      ]
       @optional_envs = ['SAMBA_DC_REALM', 'SAMBA_DC_WORKGROUP', 
         'SAMBA_DC_SERVER_STRING', 'SAMBA_DC_NETBIOS_NAME', 'SAMBA_DC_INTERFACES',
         'SAMBA_DC_APP_FILTER', 'SAMBA_DC_CREATE_STRUCTURE',
         'SAMBA_DC_ADMIN_NAME', 'SAMBA_DC_TEMPLATE_SHELL', 'SAMBA_DC_TEMPLATE_HOMEDIR',
         'SAMBA_DC_DOMAIN_USERS_GID_NUMBER', 'SAMBA_DC_USER_COMPLEX_PASS', 'SAMBA_DC_USER_MAX_PASS_AGE',
-        'SAMBA_DC_USER_MAX_PASS_LENGTH', 'SAMBA_DC_LOG_LEVEL'
+        'SAMBA_DC_USER_MAX_PASS_LENGTH', 'SAMBA_DC_LOG_LEVEL',
       ]
       @default_envs = {'SAMBA_DC_APP_FILTER' => 'false', 'SAMBA_DC_CREATE_STRUCTURE' => 'true',
         'SAMBA_DC_ADMIN_NAME' => 'Administrator', 'SAMBA_DC_TEMPLATE_SHELL' => '/bin/false',
@@ -27,6 +28,7 @@ module Anas
       new_envs = envs
       ensure_env!(envs, 'BASE_DOMAIN_NAME')
       new_envs['SAMBA_DC_DOMAIN_NAME'] = envs['BASE_DOMAIN_NAME']
+      new_envs['SAMBA_DC_DNS_SEARCH'] = new_envs['SAMBA_DC_DOMAIN_NAME']
       if envs.has_key?('SAMBA_DC_REALM')
         new_envs['SAMBA_DC_REALM'] = envs['SAMBA_DC_REALM'].to_s.upcase
       else
@@ -53,8 +55,8 @@ module Anas
       new_envs['SAMBA_DC_BASE_USERS_DN'] = "OU=People,#{new_envs['SAMBA_DC_BASE_DN']}"
       new_envs['SAMBA_DC_BASE_APP_DN'] = "OU=Apps,OU=Groups,#{new_envs['SAMBA_DC_BASE_DN']}"
       new_envs['SAMBA_DC_ADMIN_DN'] = "CN=#{envs['SAMBA_DC_ADMIN_NAME']},CN=Users,#{new_envs['SAMBA_DC_BASE_DN']}"
-      new_envs['SAMBA_DC_GROUP_CLASS_FILTER'] = "(objectclass=group)"
-      new_envs['SAMBA_DC_USER_CLASS_FILTER'] = "(objectclass=person)"
+      new_envs['SAMBA_DC_GROUP_CLASS_FILTER'] = "(objectClass=group)"
+      new_envs['SAMBA_DC_USER_CLASS_FILTER'] = "(objectClass=user)"
       new_envs['SAMBA_DC_USER_ENABLED_FILTER'] = "(!(userAccountControl:1.2.840.113556.1.4.803:=2))"
       new_envs['SAMBA_DC_USER_LOGIN_ATTRS'] = 'sAMAccountName,userPrincipalName,mail' unless envs.has_key?('SAMBA_DC_USER_LOGIN_ATTRS')
       new_envs['SAMBA_DC_USER_DISPLAY_NAME'] = 'displayName'

@@ -42,7 +42,7 @@ if [ ! -f /var/lib/samba/registry.tdb ]; then
      --dns-backend=BIND9_DLZ" | sh
 
   mv /etc/samba/smb.conf /etc/samba/smb.conf.bak
-  echo 'root = $SAMBA_DC_ADMIN_NAME' > /etc/samba/smbusers
+  echo '!root = $SAMBA_DC_ADMIN_NAME' > /etc/samba/smbusers
 fi
 
 cp /var/lib/samba/private/krb5.conf /etc/krb5.conf
@@ -55,4 +55,3 @@ chmod 700 /var/log/samba/cores
 
 chmod 0755 /usr/local/bin/structure.sh
 chmod +x /usr/local/bin/anas_zone.sh
-

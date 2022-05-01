@@ -78,7 +78,7 @@ if [ $SAMBA_DC_CREATE_STRUCTURE == "true" ]; then
   # craete ou in groups
   create_ou "OU=Role" "OU=Groups,$SAMBA_DC_BASE_DN" "Role"
   create_ou "OU=Access" "OU=Groups,$SAMBA_DC_BASE_DN" "Access"
-  create_ou "OU=Computer" "OU=Groups,$SAMBA_DC_BASE_DN" "Computer"
+  # create_ou "OU=Computer" "OU=Groups,$SAMBA_DC_BASE_DN" "Computer"
 fi
 
 # samba password rule

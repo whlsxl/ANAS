@@ -7,7 +7,11 @@
 	server role = active directory domain controller
 	workgroup = ${SAMBA_DC_WORKGROUP}
 
+	# server services = rpc, nbt, wrepl, ldap, cldap, kdc, drepl, ntp_signd, kcc, dnsupdate, winbindd
+	# server services = -dns, -winbindd, -s3fs
+	# server services = -dns, -smbd
 	server services = -dns
+	rpc server port = 10240
 	bind interfaces only = ${SAMBA_DC_BIND_INTERFACES_ONLY}
 	domain master = ${SAMBA_DC_DOMAIN_MASTER}
 	interfaces = lo ${SAMBA_DC_INTERFACES}
