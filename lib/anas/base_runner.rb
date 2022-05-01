@@ -257,5 +257,12 @@ module Anas
       end
     end
 
+    # Whether the mod need to use Host Lan.
+    # 
+    # @return [String] value can be 'required', 'optional' or nil
+    def use_host_lan?
+      return nil
+    end
+
   end
 end

@@ -1,3 +1,5 @@
+require 'ipaddr'
+require 'highline/import'
 
 class ::Hash
   # via https://stackoverflow.com/a/25835016/2257038
@@ -43,6 +45,17 @@ class String
     Object.const_get(self)
   end
 
+  def yesno?(default = false)
+    a = ''
+    s = default ? '[Y/n]' : '[y/N]'
+    d = default ? 'y' : 'n'
+    until %w[y n].include? a
+      a = ask("#{self} #{s} ") { |yn| yn.limit = 1, yn.validate = /[yn]/i }
+      a = d if a.length == 0
+    end
+    a.downcase == 'y'
+  end
+
   def mod_class!
     require "#{self}/runner"
     mod = self.mod_class
@@ -76,5 +89,11 @@ class String
     rescue => exception
       return false
     end
+  end
+end
+
+class IPAddr
+  def ^(other)
+    return self.clone.set(@addr ^ coerce_other(other).to_i)
   end
 end

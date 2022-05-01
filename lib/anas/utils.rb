@@ -1,6 +1,7 @@
 require 'logger'
 require 'yaml'
 require 'pathname'
+require 'ipaddr'
 
 # The base class & method for A NAS
 module Anas
@@ -10,6 +11,9 @@ module Anas
   class ConfigError < StandardError; end
   class NotInstalledError < StandardError; end
   class HasDependencyError < StandardError; end
+  class EnvError < StandardError; end
+  class NetworkError < StandardError; end
+  class UnknownError < StandardError; end
 
   # Loggers, default level is `info`
   Log = Logger.new(STDOUT)
@@ -218,6 +222,27 @@ module Anas
       return mods_name
     end
 
+    # @return [Hash<String, Array<String>>] Hash key are 'required' & 'optional'
+    def use_host_lan_mods_name
+      required_mods_name =[]
+      optional_mods_name =[]
+      @all_dependent_nodes.each do |key, node|
+        if node.runner.use_host_lan? == 'required'
+          required_mods_name.append key
+        elsif node.runner.use_host_lan? == 'optional'
+          optional_mods_name.append key
+        end
+      end
+      return {
+        'required' => required_mods_name,
+        'optional' => optional_mods_name,
+      }
+    end
+
+    def require_host_lan_mods_name
+      return use_host_lan_mods_name['required'].length != 0
+    end
+
     # Process mod by dependent order
     # block return value can't use `return`
     # 
@@ -279,6 +304,8 @@ module Anas
 
       # start
       @dependent_tree = nil
+
+      @base_path = nil
 
       # init_mods_class
       check_system_envs
@@ -364,6 +391,9 @@ module Anas
     def start_mods(mods, envs)
       Log.info("Start modules")
       dependent_tree = @dependent_tree
+      if dependent_tree.require_host_lan_mods_name
+        init_network(envs)
+      end
       dependent_tree.process_mods(mods) do |mod_name, node|
         node.runner.start
       end
@@ -424,6 +454,9 @@ module Anas
     def process_envs(mods, static_envs)
       dependent_tree = @dependent_tree
       static_envs["USE_LDAP_MODS_NAME"] = dependent_tree.ldap_mods_name.join(',')
+      use_host_lan_mods_name = dependent_tree.use_host_lan_mods_name
+      static_envs["USE_HOST_LAN_REQUIRED_MODS_NAME"] = use_host_lan_mods_name['required'].join(',')
+      static_envs["USE_HOST_LAN_OPTIONAL_MODS_NAME"] = use_host_lan_mods_name['optional'].join(',')
       envs = cal_envs(mods, static_envs)
       Log.debug("Calculate envs is \n #{envs}")
       missing_envs = check_envs(mods, envs)
@@ -468,6 +501,96 @@ module Anas
       end
     end
 
+    # Create macvlan network
+    # Create macvlan network bridge & set it launch at login
+    def init_network(envs)
+      base_path = @base_path
+      Log.info("Render anas_service.sh.erb")
+      service_erb_path = File.expand_path('anas_service.sh.erb', __dir__)
+      bridge_interface = envs['VLAN_BRIDGE_INTERFACE']
+      render_envs = {
+        'default_interface' => envs['DEFAULT_INTERFACE'],
+        'ip_addr' => envs['VLAN_BRIDGE_IP'],
+        'subnet_mask' => envs['VLAN_SUBNET_MASK'],
+        'netwrok_prefix' => envs['VLAN_PREFIX'],
+        'bridge_interface' => bridge_interface,
+      }
+      Log.debug("Render envs #{render_envs}")
+      rendered = ERB.new(File.read(service_erb_path), nil).result_with_hash(render_envs)
+      rendered_file = File.expand_path('anas_service.sh', base_path)
+      File.open(rendered_file, 'w') { |file| file.write(rendered) }
+      FileUtils.chmod("+x", rendered_file)
+      Log.info("Add crontab @reboot #{rendered_file}")
+      print "Add macblan network bridge launch at login need root privillege \n"
+      %x(sudo sh -c '(crontab -l ; echo "@reboot #{rendered_file}") | sort - | uniq - | crontab - ')
+      print "\n"
+      error_code = $?.exitstatus
+      if error_code != 0
+        raise NetworkError.new("Add macvlan network bridge launch at login failed error_code: #{error_code}")
+      end
+      Log.info("Check macvlan network bridge whether exist?")
+      result = %x(ip link show #{bridge_interface})
+      unless result.include?('does not exist')
+        unless "Interface `#{bridge_interface}` is exist, ANAS will delete it before create bridge, Continue?".yesno?
+          exit!
+        end
+        Log.info("sudo ip link delete #{bridge_interface}")
+        %x(sudo ip link delete #{bridge_interface})
+        error_code = $?.exitstatus
+        if error_code != 0
+          raise NetworkError.new("Delete interface `#{bridge_interface}` failed error_code: #{error_code}")
+        end
+      end
+      Log.info("Create macvlan network bridge, execute: 'sudo sh #{rendered_file}'")
+      %x(sudo sh #{rendered_file})
+      # docker network
+      vlan_interface = envs['VLAN_INTERFACE']
+      result = %x(docker network ls -f 'name=#{vlan_interface}')
+      if result.include?(vlan_interface)
+        unless "Docker network `#{vlan_interface}` is exist, ANAS will delete it before create network, Continue?".yesno?
+          exit!
+        end
+        Log.info("docker network rm #{vlan_interface}")
+        %x(docker network rm #{vlan_interface})
+        error_code = $?.exitstatus
+        if error_code != 0
+          raise NetworkError.new("Delete docker network `#{vlan_interface}` failed error_code: #{error_code}")
+        end
+      end
+      Log.info("Create docker macvlan network: #{envs['VLAN_INTERFACE']}")
+      Log.info("docker network create -d macvlan -o parent=#{envs['DEFAULT_INTERFACE']} \
+        --subnet #{envs['HOST_SEGMENT']} \
+        --gateway #{envs['GATEWAY_IP']} \
+        --ip-range #{envs['VLAN_SEGMENT']} \
+        --aux-address 'bridge=#{envs['VLAN_BRIDGE_IP']}' \
+        --aux-address 'bridge=#{envs['VLAN_PREFIX']}' \
+        #{envs['VLAN_INTERFACE']}")
+      %x(docker network create -d macvlan -o parent=#{envs['DEFAULT_INTERFACE']} \
+        --subnet #{envs['HOST_SEGMENT']} \
+        --gateway #{envs['GATEWAY_IP']} \
+        --ip-range #{envs['VLAN_SEGMENT']} \
+        --aux-address 'bridge=#{envs['VLAN_BRIDGE_IP']}' \
+        --aux-address 'bridge=#{envs['VLAN_PREFIX']}' \
+        #{envs['VLAN_INTERFACE']}
+      )
+      error_code = $?.exitstatus
+      if error_code != 0
+        raise NetworkError.new("Create docker macvlan network failed error_code: #{error_code}")
+      end
+    end
+
+    # Remove macvlan network
+    # Remove macvlan network bridge & set it launch at login
+    def clean_network(envs)
+      Log.info("Delete network bridge launch at login")
+      print "Delete macblan network bridge launch at login need root privillege: "
+      %x(sudo sh -c '(crontab -l ; grep -v anas_service.sh) | crontab - ')
+      Log.info("Delete network bridge, execute: sudo sh #{rendered_file} del")
+      %x("sudo sh #{rendered_file} del")
+      Log.info("Remove docker macvlan network: #{envs['VLAN_INTERFACE']}")
+      %x(docker network rm #{envs['VLAN_INTERFACE']})
+    end
+
     # if don't specify base path, use default path -  ~/.anas
     # 
     # @return String, the base path
@@ -505,6 +628,7 @@ module Anas
       options = @options
       actions = @actions
       base_path = check_base_path options['base']
+      @base_path = base_path
       working_path = nil
       config = nil
       is_tmp_path = nil
