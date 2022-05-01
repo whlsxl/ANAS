@@ -21,19 +21,23 @@ echo "Set default_phone_region => $NEXTCLOUD_PHONE_REGION"
 occ config:system:set default_phone_region --value=$NEXTCLOUD_PHONE_REGION
 
 # default_language
+echo "Set default_language => $DEFAULT_LANGUAGE"
 occ config:system:set default_language --value=$DEFAULT_LANGUAGE
 
 # config domain
+echo "Set https https://$NEXTCLOUD_DOMAIN_NAME:$TREAFIK_BASE_PORT"
 occ config:system:set overwriteprotocol --value=https
 occ config:system:set trusted_domains 0 --value=$NEXTCLOUD_DOMAIN_NAME:$TREAFIK_BASE_PORT
 occ config:system:set overwrite.cli.url --value=https://$NEXTCLOUD_DOMAIN_NAME:$TREAFIK_BASE_PORT
 
 # cron
+echo "Set occ background:cron"
 occ background:cron
 
 # LDAP
 # occ config:app:set --value=300 user_ldap cleanUpJobChunkSize
 
+echo "Set LDAP"
 occ app:enable user_ldap
 
 if [ -z "$LDAP_CONFIG_NAME" ]; then
@@ -75,6 +79,7 @@ $LDAP_CMD ldapExpertUUIDGroupAttr cn
 $LDAP_CMD ldapAgentName "$SAMBA_DC_ADMIN_DN"
 $LDAP_CMD ldapAgentPassword "$SAMBA_DC_ADMIN_PASSWORD"
 
+echo "occ ldap:test-config $LDAP_CONFIG_NAME"
 occ ldap:test-config $LDAP_CONFIG_NAME
 
 # password policy

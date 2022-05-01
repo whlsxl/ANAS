@@ -75,6 +75,21 @@ module Anas
       return true
     end
 
+    def module_envs(envs)
+      new_envs = envs
+      new_envs['MEMORY_LIMIT'] = '512M'
+      new_envs['UPLOAD_MAX_SIZE'] = '2048M'
+      new_envs['OPCACHE_MEM_SIZE'] = '128'
+      new_envs['APC_SHM_SIZE'] = '128M'
+      new_envs['REAL_IP_HEADER'] = 'X-Forwarded-For'
+      new_envs['LOG_IP_VAR'] = 'http_x_forwarded_for'
+      
+      new_envs['HSTS_HEADER'] = 'max-age=15768000; includeSubDomains'
+      new_envs['RP_HEADER'] = 'strict-origin'
+      new_envs['SUBDIR'] = ''
+      return new_envs
+    end
+
     def run_after_mods(envs)
       return ['samba_dc']
     end
