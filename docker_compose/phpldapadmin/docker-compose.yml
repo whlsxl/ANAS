@@ -18,5 +18,5 @@ services:
       - .env
 networks:
   traefik:
-    external:
-      name: traefik
+    external: true
+    name: traefik

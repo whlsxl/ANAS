@@ -118,8 +118,8 @@ networks:
     driver: bridge
     name: nextcloud
   mysql:
-    external:
-      name: mysql
+    name: mysql
+    external: true
   traefik:
-    external:
-      name: traefik
+    name: traefik
+    external: true

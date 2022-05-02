@@ -20,8 +20,8 @@ services:
       - .env
 networks:
   mysql:
-    external:
-      name: mysql
+    external: true
+    name: mysql
   traefik:
-    external:
-      name: traefik
+    external: true
+    name: traefik
