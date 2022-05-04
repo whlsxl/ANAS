@@ -2,9 +2,9 @@ version: "3.5"
 
 services:
   traefik:
-    image: ${IMAGE_PREFIX}traefik:latest
+    image: ${IMAGE_PREFIX}${MODULE_NAME}:latest
     build: ./traefik
-    container_name: ${NEXTCLOUD_CONTAINER_NAME}
+    container_name: ${CONTAINER_PREFIX}${MODULE_NAME}
     command:
       - --entrypoints.https.address=:${TREAFIK_BASE_PORT}
       - --providers.docker=true

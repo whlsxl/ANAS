@@ -257,6 +257,16 @@ module Anas
       end
     end
 
+    def append_envs(new_envs)
+      env_file = File.expand_path(".env", @working_path)
+      Log.info("Append envs file #{env_file}")
+      File.open(env_file, 'a') do |file|
+        new_envs.each do |key, value|
+          file.write "#{key}=#{value}\n"
+        end
+      end
+    end
+
     # Whether the mod need to use Host Lan.
     # 
     # @return [String] value can be 'required', 'optional' or nil
@@ -264,5 +274,22 @@ module Anas
       return nil
     end
 
+    # Mod neec domain
+    # return domain Array, include a Hash like 
+    # [
+    #   ['inner', 'nc', 'nextcloud']
+    # ]
+    # [0]: type
+    # [1]: domain_prefix
+    # [2]: inner_domain
+    # type: inner => host ip, dhcp => macvlan
+    # @return [Array<Hash<String, String>>] 
+    def domain(envs)
+      key = "#{@mod_name.upcase}_DOMAIN_PREFIX"
+      if envs.has_key?(key) && !envs[key].nil?
+        return [['inner', envs[key], @mod_name]] # type, domain_prefix, inner_domain
+      end
+      return nil
+    end
   end
 end

@@ -15,7 +15,7 @@ waiting_dns() {
 
 sleep 5
 
-echo "Add wildcard domain resolve *.$BASE_DOMAIN $HOST_IP"
+echo "Add domain resolve"
 
 if [ $BIND_DEBUG == "true" ]; then
   nsupdate_command="nsupdate -d -g"
@@ -29,11 +29,27 @@ waiting_dns
 hostname=$(hostname -s)
 echo "exec \"kinit -k -t /var/lib/samba/private/dns.keytab dns-$hostname\""
 kinit -k -t /var/lib/samba/private/dns.keytab dns-$hostname
-echo "
+update_sheet="
   server 127.0.0.1
-  update add *.$BASE_DOMAIN. 3600 IN A $HOST_IP
+"
+
+for domain in $(echo $DOMAINS | tr "," "\n")
+do
+  domain_arr=( $(echo $domain | tr "/" " ") )
+  if [ "${domain_arr[0]}" == 'inner' ]; then   
+    echo "add ${domain_arr[1]}.$BASE_DOMAIN. 3600 IN A $HOST_IP"  
+    update_sheet="
+      $update_sheet
+      update add ${domain_arr[1]}.$BASE_DOMAIN. 3600 IN A $HOST_IP
+      "
+  elif [ "${domain_arr[0]}" == 'dhcp' ]; then 
+    echo "dhcp TODO"
+    # TODO
+  fi
+done
+echo "
+  $update_sheet
   send
   quit
   " | $nsupdate_command
-
-echo "Wildcard add completed"
+echo "Add domain completed"

@@ -56,17 +56,17 @@ if [ $SAMBA_DC_APP_FILTER == "true" ]; then
   done
 fi
 
-# deal with Administrator
-# if [ ! -z "$SAMBA_DC_ADMIN_NAME" ]; then
-#   echo "Deal with Administrator"
-#   sAMAccountName=$( get_attribute_dn 'description=Built-in account for administering the computer/domain' sAMAccountName )
-#   if [ $sAMAccountName == $SAMBA_DC_ADMIN_NAME ]; then
-#     echo "Administrator name already: $SAMBA_DC_ADMIN_NAME "
-#   else
-#     echo "Administrator rename $sAMAccountName => $SAMBA_DC_ADMIN_NAME"
-#     echo $(samba-tool user rename $sAMAccountName --samaccountname=$SAMBA_DC_ADMIN_NAME)
-#   fi
-# fi
+deal with Administrator
+if [ ! -z "$SAMBA_DC_ADMIN_NAME" ]; then
+  echo "Deal with Administrator"
+  sAMAccountName=$( get_attribute_dn 'description=Built-in account for administering the computer/domain' sAMAccountName )
+  if [ $sAMAccountName == $SAMBA_DC_ADMIN_NAME ]; then
+    echo "Administrator name already: $SAMBA_DC_ADMIN_NAME "
+  else
+    echo "Administrator rename $sAMAccountName => $SAMBA_DC_ADMIN_NAME"
+    echo $(samba-tool user rename $sAMAccountName --samaccountname=$SAMBA_DC_ADMIN_NAME)
+  fi
+fi
 
 # auto create ldap structure
 if [ $SAMBA_DC_CREATE_STRUCTURE == "true" ]; then

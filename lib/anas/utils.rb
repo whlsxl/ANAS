@@ -85,6 +85,10 @@ module Anas
       end
       return nil
     end
+
+    def inspect
+      return "<ModNode @ #{@mod_name}>"
+    end
   end
 
   class DependentTree
@@ -224,8 +228,8 @@ module Anas
 
     # @return [Hash<String, Array<String>>] Hash key are 'required' & 'optional'
     def use_host_lan_mods_name
-      required_mods_name =[]
-      optional_mods_name =[]
+      required_mods_name = []
+      optional_mods_name = []
       @all_dependent_nodes.each do |key, node|
         if node.runner.use_host_lan? == 'required'
           required_mods_name.append key
@@ -237,6 +241,17 @@ module Anas
         'required' => required_mods_name,
         'optional' => optional_mods_name,
       }
+    end
+
+    def domains(envs)
+      domains = []
+      @all_dependent_nodes.each do |key, node|
+        domain = node.runner.domain(envs)
+        if !domain.nil?
+          domains += domain
+        end
+      end
+      return domains
     end
 
     def require_host_lan_mods_name
@@ -464,7 +479,14 @@ module Anas
         Log.error("Missing envs\n#{missing_envs}")
         raise NoENVError.new(missing_envs)
       end
-      return envs
+      domains = dependent_tree.domains(envs)
+      new_envs = {}
+      new_envs["DOMAINS"] = domains.map { |domain| domain.join('/') }.join(',')
+      dependent_tree.process_mods(mods) do |mod_name, node|
+        runner = node.runner
+        runner.append_envs(new_envs)
+      end
+      return envs.merge(new_envs)
     end
 
     def sync_tmp!(tmp,release)

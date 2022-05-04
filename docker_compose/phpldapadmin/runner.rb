@@ -24,15 +24,5 @@ module Anas
     def run_after_mods(envs)
       return ['samba_dc']
     end
-
-    def domain(envs)
-      return [
-        {
-          'domain_prefix': envs['PHPLDAPADMIN_DOMAIN_PREFIX'],
-          'inner_domain': @mod_name,
-          'type': 'inner',
-        }
-      ]
-    end
   end
 end
