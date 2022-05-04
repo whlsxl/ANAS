@@ -44,8 +44,8 @@ options {
     allow-transfer {
         none;
     };
-    tkey-gssapi-keytab "/var/lib/samba/bind-dns/dns.keytab";
-    # tkey-gssapi-keytab "/var/lib/samba/private/dns.keytab";
+    # tkey-gssapi-keytab "/var/lib/samba/bind-dns/dns.keytab";
+    tkey-gssapi-keytab "/var/lib/samba/private/dns.keytab";
     minimal-responses yes;
  };
 

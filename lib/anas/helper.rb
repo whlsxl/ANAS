@@ -96,4 +96,14 @@ class IPAddr
   def ^(other)
     return self.clone.set(@addr ^ coerce_other(other).to_i)
   end
+
+  # 192.168.1.0/255.255.255.0
+  def full_ip_mask
+    return "#{_to_string(@addr)}/#{_to_string(@mask_addr)}"
+  end
+
+  # 255.255.255.0
+  def full_mask
+    return _to_string(@mask_addr)
+  end
 end

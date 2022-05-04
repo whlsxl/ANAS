@@ -102,6 +102,7 @@ module Anas
         raise NetworkError.new("The interface: #{envs['DEFAULT_INTERFACE']} subnew mask: #{new_envs['HOST_SUBNET_MASK']} error")
       end
       new_envs['HOST_SEGMENT'] = "#{host_segment.to_s}/#{new_envs['HOST_SUBNET_MASK']}"
+      new_envs['HOST_SEGMENT_FULL'] = host_segment.full_ip_mask
       host_subnet_mask = new_envs['HOST_SUBNET_MASK'].to_i
       vlan_subnet_mask = 28
       new_envs['VLAN_SUBNET_MASK'] = vlan_subnet_mask

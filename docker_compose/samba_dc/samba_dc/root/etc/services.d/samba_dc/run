@@ -3,5 +3,6 @@
 echo "samba -i"
 
 nohup bash -c "/usr/local/bin/structure.sh &"
+nohup bash -c "/usr/local/bin/anas_zone.sh &"
 
 exec samba -i </dev/null

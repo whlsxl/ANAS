@@ -3,5 +3,4 @@
 sleep 2
 
 echo "smbd --foreground --no-process-group"
-
 exec smbd --foreground --no-process-group

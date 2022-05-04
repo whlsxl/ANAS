@@ -1,4 +1,4 @@
-FROM ghcr.io/linuxserver/baseimage-ubuntu:focal
+FROM ghcr.io/linuxserver/baseimage-ubuntu:jammy
 LABEL maintainer="Hailong"
 
 ENV DEBIAN_FRONTEND noninteractive

@@ -82,11 +82,14 @@ envsubst < /etc/krb5.conf.j2 > /etc/krb5.conf
 
 chmod +x /usr/local/bin/samba_create_user_dir.sh
 chmod +x /usr/local/bin/join_ad.sh
+chmod +x /usr/local/bin/anas_zone.sh
 
-ip=$(ip addr show | grep -E '^\s*inet' | grep -m1 global | awk '{ print $2 }' | sed 's|/.*||')
-export HOST_IP="${HOST_IP:-$ip}"
-
-echo "$HOST_IP  $SAMBA_FS_HOSTNAME.$SAMBA_DC_DOMAIN_NAME  $SAMBA_FS_HOSTNAME" >> /etc/hosts
+echo "Set /etc/hosts"
+sed "/$SAMBA_FS_HOSTNAME/d" /etc/hosts > ~/hosts
+cp ~/hosts /etc/hosts 
+export HOST_IP=$(ip addr show | grep -E '^\s*inet' | grep -m1 global | awk '{ print $2 }' | sed 's|/.*||')
+fs_hostname=`echo $SAMBA_FS_HOSTNAME | tr '[:upper:]' '[:lower:]'`
+echo "$HOST_IP  $fs_hostname.$SAMBA_DC_DOMAIN_NAME  $fs_hostname" >> /etc/hosts
 
 # dns
 echo "Setting DNS resolv.conf"
