@@ -8,7 +8,7 @@ services:
       args:
         - CHINESE_SPEEDUP
     image: ${IMAGE_PREFIX}${MODULE_NAME}:latest
-    dns_search: ${BASE_DOMAIN_NAME}
+    dns_search: ${BASE_DOMAIN}
     restart: unless-stopped
     network_mode: host
     devices:

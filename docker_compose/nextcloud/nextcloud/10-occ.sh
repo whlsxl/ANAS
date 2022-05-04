@@ -25,10 +25,10 @@ echo "Set default_language => $DEFAULT_LANGUAGE"
 occ config:system:set default_language --value=$DEFAULT_LANGUAGE
 
 # config domain
-echo "Set https https://$NEXTCLOUD_DOMAIN_NAME:$TREAFIK_BASE_PORT"
+echo "Set https https://$NEXTCLOUD_DOMAIN:$TREAFIK_BASE_PORT"
 occ config:system:set overwriteprotocol --value=https
-occ config:system:set trusted_domains 0 --value=$NEXTCLOUD_DOMAIN_NAME:$TREAFIK_BASE_PORT
-occ config:system:set overwrite.cli.url --value=https://$NEXTCLOUD_DOMAIN_NAME:$TREAFIK_BASE_PORT
+occ config:system:set trusted_domains 0 --value=$NEXTCLOUD_DOMAIN:$TREAFIK_BASE_PORT
+occ config:system:set overwrite.cli.url --value=https://$NEXTCLOUD_DOMAIN:$TREAFIK_BASE_PORT
 
 # cron
 echo "Set occ background:cron"

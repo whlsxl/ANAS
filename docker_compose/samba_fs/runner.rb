@@ -8,8 +8,8 @@ module Anas
 
     def self.init
       super
-      @required_envs = ['SAMBA_DC_REALM', 'SAMBA_DC_DC_DOMAIN_NAME', 
-        'SAMBA_DC_DOMAIN_NAME', 'SAMBA_DC_WORKGROUP',
+      @required_envs = ['SAMBA_DC_REALM', 'SAMBA_DC_DC_DOMAIN', 
+        'SAMBA_DC_DOMAIN', 'SAMBA_DC_WORKGROUP',
         'SAMBA_DC_ADMIN_NAME', 'SAMBA_DC_ADMIN_PASSWORD',
         # SAMBA_FS
         'SHARE_DIR_NAME',

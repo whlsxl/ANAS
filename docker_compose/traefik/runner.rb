@@ -7,16 +7,21 @@ module Anas
 
     def self.init
       super
-      @optional_envs = ['TREAFIK_BASE_PORT']
-      @default_envs = {'TREAFIK_BASE_PORT' => '9000'}
+      @optional_envs = [
+        'TREAFIK_BASE_PORT', 'TRAEFIK_DOMAIN_PREFIX'
+      ]
+      @default_envs = {'TREAFIK_BASE_PORT' => '9000', 
+        'TRAEFIK_DOMAIN_PREFIX' => 'traefik'
+      }
       @dependent_mods = ['lego']
     end
 
     def cal_envs(envs)
       new_envs = envs
-      new_envs['NEXTCLOUD_CONTAINER_NAME'] = "#{envs['CONTAINER_PREFIX']}traefik"
+      # new_envs['TRAEFIK_CONTAINER_NAME'] = "#{envs['CONTAINER_PREFIX']}traefik"
+      new_envs['TRAEFIK_DOMAIN'] = "#{envs['TRAEFIK_DOMAIN_PREFIX']}.#{envs['BASE_DOMAIN']}"
       return new_envs
     end
-
+    
   end
 end

@@ -10,7 +10,7 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.nextcloud.entrypoints=https"
-      - "traefik.http.routers.nextcloud.rule=Host(`${NEXTCLOUD_DOMAIN_NAME}`)"
+      - "traefik.http.routers.nextcloud.rule=Host(`${NEXTCLOUD_DOMAIN}`)"
       - "traefik.http.routers.nextcloud.middlewares=nextcloud-dav,nextcloud-webfinger,nextcloud-regex,nextcloud-header"
       - "traefik.http.routers.nextcloud.tls=true"
       - "traefik.http.services.nextcloud.loadbalancer.server.port=8000"
@@ -29,13 +29,6 @@ services:
       - "traefik.http.middlewares.nextcloud-header.headers.customRequestHeaders.X-Forwarded-Proto=https"
     env_file:
       - .env
-    environment:
-      - "DB_TYPE=mysql"
-      - "DB_HOST=${MYSQL_HOST}"
-      - "DB_NAME=${NEXTCLOUD_DB_NAME}"
-      - "DB_USER=root"
-      - "DB_PASSWORD=${MYSQL_ROOT_PASSWORD}"
-      - "REAL_IP_FROM=${NEXTCLOUD_CONTAINER_NAME}"
     restart: unless-stopped
     networks:
       - mysql
@@ -52,11 +45,6 @@ services:
     env_file:
       - .env
     environment:
-      - "DB_TYPE=mysql"
-      - "DB_HOST=${MYSQL_HOST}"
-      - "DB_NAME=${NEXTCLOUD_DB_NAME}"
-      - "DB_USER=root"
-      - "DB_PASSWORD=${MYSQL_ROOT_PASSWORD}"
       - "SIDECAR_CRON=1"
       - "CRON_PERIOD=*/5 * * * *"
     restart: unless-stopped
@@ -75,11 +63,6 @@ services:
     env_file:
       - .env
     environment:
-      - "DB_TYPE=mysql"
-      - "DB_HOST=${MYSQL_HOST}"
-      - "DB_NAME=${NEXTCLOUD_DB_NAME}"
-      - "DB_USER=root"
-      - "DB_PASSWORD=${MYSQL_ROOT_PASSWORD}"
       - "SIDECAR_PREVIEWGEN=1"
       - "PREVIEWGEN_PERIOD=0 * * * *"
     restart: unless-stopped
@@ -98,11 +81,6 @@ services:
     env_file:
       - .env
     environment:
-      - "DB_TYPE=mysql"
-      - "DB_HOST=${MYSQL_HOST}"
-      - "DB_NAME=${NEXTCLOUD_DB_NAME}"
-      - "DB_USER=root"
-      - "DB_PASSWORD=${MYSQL_ROOT_PASSWORD}"
       - "SIDECAR_NEWSUPDATER=1"
       - "NC_NEWSUPDATER_THREADS=10"
       - "NC_NEWSUPDATER_TIMEOUT=300"

@@ -12,12 +12,12 @@
     # pkinit_anchors = FILE:/etc/ssl/certs/ca-certificates.crt
 [realms]
     ${SAMBA_DC_REALM} = {
-      kdc = ${SAMBA_DC_DC_DOMAIN_NAME}
-      default_domain = ${SAMBA_DC_DOMAIN_NAME}
+      kdc = ${SAMBA_DC_DC_DOMAIN}
+      default_domain = ${SAMBA_DC_DOMAIN}
     }
 [domain_realm]
-    .${SAMBA_DC_DOMAIN_NAME} = ${SAMBA_DC_REALM}
-    ${SAMBA_DC_DOMAIN_NAME} = ${SAMBA_DC_REALM}
+    .${SAMBA_DC_DOMAIN} = ${SAMBA_DC_REALM}
+    ${SAMBA_DC_DOMAIN} = ${SAMBA_DC_REALM}
 # #[kdc]
 # #    profile = /etc/krb5kdc/kdc.conf
 # [logging]

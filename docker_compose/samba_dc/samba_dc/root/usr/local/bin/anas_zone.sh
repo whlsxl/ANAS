@@ -15,7 +15,7 @@ waiting_dns() {
 
 sleep 5
 
-echo "Add wildcard domain resolve *.$BASE_DOMAIN_NAME $HOST_IP"
+echo "Add wildcard domain resolve *.$BASE_DOMAIN $HOST_IP"
 
 if [ $BIND_DEBUG == "true" ]; then
   nsupdate_command="nsupdate -d -g"
@@ -25,13 +25,13 @@ fi
 
 waiting_dns
 
-# update *.$BASE_DOMAIN_NAME to host ip
+# update *.$BASE_DOMAIN to host ip
 hostname=$(hostname -s)
 echo "exec \"kinit -k -t /var/lib/samba/private/dns.keytab dns-$hostname\""
 kinit -k -t /var/lib/samba/private/dns.keytab dns-$hostname
 echo "
   server 127.0.0.1
-  update add *.$BASE_DOMAIN_NAME 3600 IN A $HOST_IP
+  update add *.$BASE_DOMAIN. 3600 IN A $HOST_IP
   send
   quit
   " | $nsupdate_command

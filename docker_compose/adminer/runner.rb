@@ -17,7 +17,7 @@ module Anas
 
     def cal_envs(envs)
       new_envs = envs
-      new_envs['ADMINER_DOMAIN'] = "#{envs['ADMINER_DOMAIN_PREFIX']}.#{envs['BASE_DOMAIN_NAME']}"
+      new_envs['ADMINER_DOMAIN'] = "#{envs['ADMINER_DOMAIN_PREFIX']}.#{envs['BASE_DOMAIN']}"
       return new_envs
     end
 

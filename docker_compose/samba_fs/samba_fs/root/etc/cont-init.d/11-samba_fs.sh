@@ -3,7 +3,7 @@
 join_domain() {
   while :
   do
-    echo "Joining AD $SAMBA_DC_DOMAIN_NAME ..."
+    echo "Joining AD $SAMBA_DC_DOMAIN ..."
     sleep 5
     echo "echo *** | kinit $SAMBA_DC_ADMIN_NAME"
     echo $SAMBA_DC_ADMIN_PASSWORD | kinit $SAMBA_DC_ADMIN_NAME
@@ -13,12 +13,12 @@ join_domain() {
       echo net ads join -d $SAMBA_FS_LOG_LEVEL -U "$SAMBA_DC_ADMIN_NAME%*****"
       net ads join -d $SAMBA_FS_LOG_LEVEL -U "$SAMBA_DC_ADMIN_NAME%$SAMBA_DC_ADMIN_PASSWORD"
 
-      # samba-tool domain join $SAMBA_DC_DOMAIN_NAME MEMBER -U $SAMBA_DC_ADMIN_NAME --password=$SAMBA_DC_ADMIN_PASSWORD
+      # samba-tool domain join $SAMBA_DC_DOMAIN MEMBER -U $SAMBA_DC_ADMIN_NAME --password=$SAMBA_DC_ADMIN_PASSWORD
       result=$?
       if [ $result == 0 ]; then
         return
       fi
-      echo "Join AD $SAMBA_DC_DOMAIN_NAME failed, waiting retry..."
+      echo "Join AD $SAMBA_DC_DOMAIN failed, waiting retry..."
       sleep 4
     else
       echo "kinit failed, waiting retry..."
@@ -31,7 +31,7 @@ join_domain() {
 
 #   while :
 #   do
-#     echo "Join AD $SAMBA_DC_DOMAIN_NAME"
+#     echo "Join AD $SAMBA_DC_DOMAIN"
 
 #     echo "echo *** | kinit $SAMBA_DC_ADMIN_NAME"
 #     echo $SAMBA_DC_ADMIN_PASSWORD | kinit $SAMBA_DC_ADMIN_NAME
@@ -39,15 +39,15 @@ join_domain() {
 #     if [ $result == 0 ]; then
 #       while :
 #       do
-#         echo "Join AD $SAMBA_DC_DOMAIN_NAME"
-#         echo samba-tool domain join $SAMBA_DC_DOMAIN_NAME MEMBER -U "\"$SAMBA_DC_ADMIN_NAME%******\""
+#         echo "Join AD $SAMBA_DC_DOMAIN"
+#         echo samba-tool domain join $SAMBA_DC_DOMAIN MEMBER -U "\"$SAMBA_DC_ADMIN_NAME%******\""
 
-#         samba-tool domain join $SAMBA_DC_DOMAIN_NAME MEMBER -U $SAMBA_DC_ADMIN_NAME --password=$SAMBA_DC_ADMIN_PASSWORD
+#         samba-tool domain join $SAMBA_DC_DOMAIN MEMBER -U $SAMBA_DC_ADMIN_NAME --password=$SAMBA_DC_ADMIN_PASSWORD
 #         result=$?
 #         if [ $result == 0 ]; then
 #           return
 #         fi
-#         echo "Join AD $SAMBA_DC_DOMAIN_NAME failed, waiting retry..."
+#         echo "Join AD $SAMBA_DC_DOMAIN failed, waiting retry..."
 #         sleep 4
 #       done
 #     fi
@@ -89,7 +89,7 @@ sed "/$SAMBA_FS_HOSTNAME/d" /etc/hosts > ~/hosts
 cp ~/hosts /etc/hosts 
 export HOST_IP=$(ip addr show | grep -E '^\s*inet' | grep -m1 global | awk '{ print $2 }' | sed 's|/.*||')
 fs_hostname=`echo $SAMBA_FS_HOSTNAME | tr '[:upper:]' '[:lower:]'`
-echo "$HOST_IP  $fs_hostname.$SAMBA_DC_DOMAIN_NAME  $fs_hostname" >> /etc/hosts
+echo "$HOST_IP  $fs_hostname.$SAMBA_DC_DOMAIN  $fs_hostname" >> /etc/hosts
 
 # dns
 echo "Setting DNS resolv.conf"

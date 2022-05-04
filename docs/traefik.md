@@ -91,7 +91,7 @@ TLS证书是由CA（数字证书认证机构）颁发的，我们可以主动向
 
 ### labels:
 
-* `- "traefik.http.routers.api.rule=Host(`traefik.${BASE_URL}`)"`: Traefik Dashboard地址
+* `- "traefik.http.routers.api.rule=Host(`traefik.${BASE_DOMAIN}`)"`: Traefik Dashboard地址
 * `- "traefik.http.routers.api.service=api@internal"`: 在开启dashboard开关后，会自动生成`api@internal`的service
 * `- "traefik.http.routers.api.middlewares=auth"`: 添加dashboard的Basic Auth验证
 * `- "traefik.http.middlewares.auth.basicauth.users=${BASICAUTH_HTPASSWD}"`: 使用`echo $(htpasswd -nb [admin] [password]) | sed -e s/\\$/\\$\\$/g`生成用户名密码，用户名为**admin**，密码为**password**（务必修改）。密码建议由`openssl rand -base64 12`生成
