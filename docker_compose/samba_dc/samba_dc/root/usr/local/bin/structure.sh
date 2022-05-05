@@ -17,7 +17,7 @@ dn_exist() { # $1 dn path
 
 create_ou() { # $1 ou name, $2 base dn $3 description
   dn="$1,$2"
-  if dn_exist $dn; then
+  if dn_exist "$dn"; then
     echo "dn: $dn is exist"
   else
     echo $( samba-tool ou create "$dn" --description="$3" )
@@ -27,11 +27,21 @@ create_ou() { # $1 ou name, $2 base dn $3 description
 
 create_group() { # $1 group name, $2 base dn $3 description
   dn="CN=$1,$2,$SAMBA_DC_BASE_DN"
-  if dn_exist $dn; then
+  if dn_exist "$dn"; then
     echo "dn: $dn is exist"
   else
-    echo $( samba-tool group add $1 --groupou="$2" --description="$3" )
+    echo $( samba-tool group add "$1" --groupou="$2" --description="$3" )
     echo "Create dn:$dn description: $3"
+  fi
+}
+
+add_to_group() { # $1 group name, $2 object name
+  result=`samba-tool group listmembers "$1" | grep "$2"`
+  if [[ "$result" == *"$2"* ]]; then
+    echo "$2 already in $1"
+  else
+    echo "Add $2 to group $1"
+    echo $( samba-tool group addmembers "$1" "$2" )
   fi
 }
 
@@ -75,9 +85,15 @@ if [ $SAMBA_DC_CREATE_STRUCTURE == "true" ]; then
   create_ou "OU=People" $SAMBA_DC_BASE_DN "People"
   create_ou "OU=Servers" $SAMBA_DC_BASE_DN "Servers"
   create_ou "OU=Graveyard" $SAMBA_DC_BASE_DN "Graveyard"
-  # craete ou in groups
+  echo "Craete groups, Role & Access"
   create_ou "OU=Role" "OU=Groups,$SAMBA_DC_BASE_DN" "Role"
   create_ou "OU=Access" "OU=Groups,$SAMBA_DC_BASE_DN" "Access"
+  echo "Create `Unix Admins`"
+  APP_BASE="OU=Role,OU=Groups"
+  create_group "Unix Admins" $APP_BASE "Unix Admins"
+  add_to_group "Administrators" "Unix Admins"
+  echo net rpc rights grant "$SAMBA_DC_WORKGROUP\Unix Admins" SeDiskOperatorPrivilege -U "$SAMBA_DC_ADMIN_NAME%******"
+  net rpc rights grant "$SAMBA_DC_WORKGROUP\Unix Admins" SeDiskOperatorPrivilege -U "$SAMBA_DC_ADMIN_NAME%$SAMBA_DC_ADMIN_PASSWORD"
   # create_ou "OU=Computer" "OU=Groups,$SAMBA_DC_BASE_DN" "Computer"
 fi
 
