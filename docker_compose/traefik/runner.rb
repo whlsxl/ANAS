@@ -18,10 +18,10 @@ module Anas
 
     def cal_envs(envs)
       new_envs = envs
-      # new_envs['TRAEFIK_CONTAINER_NAME'] = "#{envs['CONTAINER_PREFIX']}traefik"
+      new_envs['TRAEFIK_CONTAINER_NAME'] = "#{envs['CONTAINER_PREFIX']}traefik"
       new_envs['TRAEFIK_DOMAIN'] = "#{envs['TRAEFIK_DOMAIN_PREFIX']}.#{envs['BASE_DOMAIN']}"
       return new_envs
     end
-    
+
   end
 end

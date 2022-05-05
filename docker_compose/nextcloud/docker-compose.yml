@@ -29,6 +29,8 @@ services:
       - "traefik.http.middlewares.nextcloud-header.headers.customRequestHeaders.X-Forwarded-Proto=https"
     env_file:
       - .env
+    # environment:
+    #   - "REAL_IP_FROM=${TRAEFIK_CONTAINER_NAME}"
     restart: unless-stopped
     networks:
       - mysql

@@ -51,7 +51,8 @@ module Anas
       new_envs['SAMBA_DC_WORKGROUP'] = new_envs['SAMBA_DC_WORKGROUP'].to_s.upcase
       new_envs['SAMBA_DC_BASE_DN'] = 'DC=' + domain.split('.').join(',DC=')
       new_envs['SAMBA_DC_BASE_COMPUTERS_DN'] = "CN=Computers,#{new_envs['SAMBA_DC_BASE_DN']}"
-      new_envs['SAMBA_DC_BASE_GROUPS_DN'] = "OU=Role,OU=Groups,#{new_envs['SAMBA_DC_BASE_DN']}"
+      new_envs['SAMBA_DC_BASE_GROUPS_DN'] = "OU=Groups,#{new_envs['SAMBA_DC_BASE_DN']}"
+      new_envs['SAMBA_DC_BASE_GROUPS_ROLE_DN'] = "OU=Role,#{new_envs['SAMBA_DC_BASE_GROUPS_DN']}"
       new_envs['SAMBA_DC_BASE_USERS_DN'] = "OU=People,#{new_envs['SAMBA_DC_BASE_DN']}"
       new_envs['SAMBA_DC_BASE_APP_DN'] = "OU=Apps,OU=Groups,#{new_envs['SAMBA_DC_BASE_DN']}"
       new_envs['SAMBA_DC_ADMIN_DN'] = "CN=#{envs['SAMBA_DC_ADMIN_NAME']},CN=Users,#{new_envs['SAMBA_DC_BASE_DN']}"
