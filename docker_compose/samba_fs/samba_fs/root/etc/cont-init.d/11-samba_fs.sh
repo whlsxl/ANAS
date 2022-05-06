@@ -82,7 +82,7 @@ envsubst < /etc/krb5.conf.j2 > /etc/krb5.conf
 
 chmod +x /usr/local/bin/samba_create_user_dir.sh
 chmod +x /usr/local/bin/join_ad.sh
-chmod +x /usr/local/bin/anas_zone.sh
+chmod +x /usr/local/bin/fix_perm.sh
 
 echo "Set /etc/hosts"
 sed "/$SAMBA_FS_HOSTNAME/d" /etc/hosts > ~/hosts

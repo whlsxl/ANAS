@@ -21,6 +21,7 @@ RUN apt-get update \
   gettext \
   iproute2 \
   wsdd2 \
+  acl \
   && apt-get clean \
   && rm -rf \
   /tmp/* \
