@@ -19,6 +19,3 @@ services:
       - .env
     cap_add:
       - SYS_ADMIN
-    ports:
-      - 53:53
-      - 53:53/udp

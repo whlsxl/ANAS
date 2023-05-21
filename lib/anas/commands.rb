@@ -20,7 +20,8 @@ module Anas
       program :help, 'Author', 'Hailong Wang <whlsxl+g@gmail.com>'
       program :help, 'GitHub', 'TODO'
 
-      global_option('-b', '--base FILE', 'The anas base working path, storage docker compose, version lock & config file, default: ~/.anas')
+      global_option('-b', '--base FILE', 'The ANAS base working path, storage docker compose, version lock & config file, default: ~/.anas')
+      global_option('-y', 'Agree all default action in ANAS')
       global_option('--verbose')
 
       command :start do |c|

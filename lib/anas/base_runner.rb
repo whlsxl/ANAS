@@ -159,7 +159,7 @@ module Anas
       File.open(env_file, 'w') do |file|
         new_envs = append_module_env(envs)
         new_envs.each do |key, value|
-          file.write "#{key}=#{value}\n"
+          file.write "#{key}='#{value}'\n"
         end
       end
     end

@@ -21,7 +21,7 @@ module Anas
         # IP
         'HOST_IP',
         # DNS
-        'DNS_PROVIDER', 'IPv4', 'IPv6',
+        'DNS_PROVIDER', 'IPv4', 'IPv6', 'DNS_SERVER',
         # File share
         'USERDATA_PATH', 'USERDATA_NAME',
         'SHARE_DIR_NAME', 'SHARE_GUEST_OK'
@@ -34,13 +34,13 @@ module Anas
         'USE_DEFAULT_DOMAIN' => 'yes', 
 
         # DNS
-        'IPv4' => 'true', 'IPv6' => 'true',
+        'IPv4' => 'true', 'IPv6' => 'true', 'DNS_SERVER' => '223.5.5.5',
         
         'SHARE_DIR_NAME' => 'Share', 'USERDATA_NAME' => 'userdata',
         'SHARE_GUEST_OK' => 'Yes',
       }
       currentDNS = Resolv::DNS::Config.default_config_hash[:nameserver]
-      @default_envs['DNS_SERVER'] = currentDNS.join(' ')
+      @default_envs['LOCAL_DNS_SERVER'] = currentDNS.join(' ')
       @dependent_mods = []
     end
     
@@ -174,7 +174,7 @@ module Anas
     end
 
     def build
-      Log.debug("Core don't need build docker-compose")
+      Log.debug("Core don't need build")
     end
 
     def start

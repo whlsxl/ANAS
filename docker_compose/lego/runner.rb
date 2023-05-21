@@ -7,7 +7,7 @@ module Anas
 
     def self.init
       super
-      @required_envs = ['LEGO_DNS_PROVIDER']
+      @required_envs = ['DNS_PROVIDER']
       @optional_envs = ['LEGO_EMAIL', 'LEGO_DNS_SERVER', 'LEGO_DATA_PATH']
       @default_envs = {'LEGO_DNS_SERVER' => '223.5.5.5'}
       @dependent_mods = ['core']
@@ -15,6 +15,16 @@ module Anas
 
     def cal_envs(envs)
       new_envs = envs
+      # Check dns provider
+      case new_envs['DNS_PROVIDER']
+      when 'tencentcloud'
+        ['TENCENTCLOUD_SECRET_KEY', 'TENCENTCLOUD_SECRET_ID'].each do |key|
+          if new_envs[key].empty?
+            raise NoENVError.new("DNS_PROVIDER: tencentcloud, but #{key} is empty")
+          end
+        end
+        # TODO
+      end
       new_envs['LEGO_EMAIL'] = envs['EMAIL'] unless envs.has_key?('LEGO_EMAIL')
       new_envs['LEGO_DATA_PATH'] = "#{envs['DATA_PATH']}/lego/certs" unless envs.has_key?('LEGO_DATA_PATH')
       new_envs['LEGO_CERTS_PATH'] = "#{envs['LEGO_DATA_PATH']}/certificates/"

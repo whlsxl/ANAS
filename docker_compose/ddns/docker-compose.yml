@@ -1,0 +1,54 @@
+version: "3.7"
+services:
+  ddns-updater:
+    image: qmcgaw/ddns-updater
+    container_name: ${CONTAINER_PREFIX}${MODULE_NAME}
+    restart: unless-stopped
+    dns:
+      - ${DDNS_DNS_SERVER}
+    env_file:
+      - .env
+    environment:
+      - CONFIG=${DDNS_CONFIG}
+      - PERIOD=5m
+      - UPDATE_COOLDOWN_PERIOD=5m
+      - PUBLICIP_FETCHERS=http
+      - PUBLICIP_HTTP_PROVIDERS=ifconfig,ipinfo
+      - PUBLICIPV4_HTTP_PROVIDERS=ipify,noip
+      - PUBLICIPV6_HTTP_PROVIDERS=ipify,noip
+      - HTTP_TIMEOUT=10s
+      - DATADIR=/updater/data
+      - RESOLVER_ADDRESS=${DDNS_DNS_SERVER}:53
+
+      # Web UI
+      - LISTENING_PORT=8000
+      - ROOT_URL=/
+
+      # Backup
+      - BACKUP_PERIOD=0 # 0 to disable
+      - BACKUP_DIRECTORY=/updater/data
+
+      # Other
+      - LOG_LEVEL=warning
+      - LOG_CALLER=short
+      - SHOUTRRR_ADDRESSES=
+      - TZ
+
+      - UID=${PUID}
+      - GID=${PGID}
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.ddns.entrypoints=https"
+      - "traefik.http.routers.ddns.rule=Host(`${DDNS_DOMAIN}`)"
+      - "traefik.http.routers.ddns.tls=true"
+      - "traefik.http.services.ddns.loadbalancer.server.port=8000"
+    networks:
+      - traefik
+
+networks:
+  default:
+    driver: bridge
+    name: ddns
+  traefik:
+    external: true
+    name: traefik

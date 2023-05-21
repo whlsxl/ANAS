@@ -17,17 +17,3 @@ services:
     volumes:
       - "${LEGO_CERTS_PATH}:/certs:ro"
       - "${DATA_PATH}/samba_dc/var:/var/lib/samba"
-    ports:
-      - 88:88
-      - 88:88/udp
-      - 135:135
-      - 137-138:137-138/udp
-      - 139:139
-      - 389:389
-      - 389:389/udp
-      - 445:445
-      - 464:464
-      - 464:464/udp
-      - 636:636
-      - 3268-3269:3268-3269
-      - 49152-65535
