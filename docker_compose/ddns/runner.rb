@@ -27,10 +27,10 @@ module Anas
       config = { "settings" => [] }
       provider_config = []
       case new_envs['DNS_PROVIDER']
-      when 'tencentcloud'
+      when 'dnspod'
         dns_config = {
           "provider": 'dnspod',
-          "token": "#{new_envs['TENCENTCLOUD_SECRET_ID']},#{new_envs['TENCENTCLOUD_SECRET_KEY']}",
+          "token": new_envs['DNSPOD_API_KEY'],
         }
         if new_envs['IPv4'] == 'true'
           ['@', '*'].each do |host|

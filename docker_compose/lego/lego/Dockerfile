@@ -1,4 +1,4 @@
-FROM goacme/lego:v4.4.0
+FROM goacme/lego:v4.11.0
 
 WORKDIR /certs
 COPY cert.sh run.sh /root/

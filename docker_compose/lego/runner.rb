@@ -17,13 +17,13 @@ module Anas
       new_envs = envs
       # Check dns provider
       case new_envs['DNS_PROVIDER']
-      when 'tencentcloud'
-        ['TENCENTCLOUD_SECRET_KEY', 'TENCENTCLOUD_SECRET_ID'].each do |key|
+      when 'dnspod'
+        ['DNSPOD_API_KEY'].each do |key|
           if new_envs[key].empty?
-            raise NoENVError.new("DNS_PROVIDER: tencentcloud, but #{key} is empty")
+            raise NoENVError.new("DNS_PROVIDER: #{new_envs['DNS_PROVIDER']}, but #{key} is empty")
           end
         end
-        # TODO
+        # TODO add more
       end
       new_envs['LEGO_EMAIL'] = envs['EMAIL'] unless envs.has_key?('LEGO_EMAIL')
       new_envs['LEGO_DATA_PATH'] = "#{envs['DATA_PATH']}/lego/certs" unless envs.has_key?('LEGO_DATA_PATH')
