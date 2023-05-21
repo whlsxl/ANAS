@@ -523,6 +523,14 @@ module Anas
       end
     end
 
+    # Config docker, /etc/docker/daemon.json, 
+    # add IPv6 support.
+    def config_docker(envs)
+      base_path = @base_path
+      Log.info("Render anas_service.sh.erb")
+      JSON.load_file("/etc/docker/daemon.json")
+    end
+
     # Create macvlan network
     # Create macvlan network bridge & set it launch at login
     def init_network(envs)
@@ -531,7 +539,7 @@ module Anas
       service_erb_path = File.expand_path('anas_service.sh.erb', __dir__)
       bridge_interface = envs['VLAN_BRIDGE_INTERFACE']
       render_envs = {
-        'default_interface' => envs['DEFAULT_INTERFACE'],
+        'default_interface' => envs['INTERFACE'],
         'ip_addr' => envs['VLAN_BRIDGE_IP'],
         'subnet_mask' => envs['VLAN_SUBNET_MASK'],
         'netwrok_prefix' => envs['VLAN_PREFIX'],
@@ -580,14 +588,14 @@ module Anas
         end
       end
       Log.info("Create docker macvlan network: #{envs['VLAN_INTERFACE']}")
-      Log.info("docker network create -d macvlan -o parent=#{envs['DEFAULT_INTERFACE']} \
+      Log.info("docker network create -d macvlan -o parent=#{envs['INTERFACE']} \
         --subnet #{envs['HOST_SEGMENT']} \
         --gateway #{envs['GATEWAY_IP']} \
         --ip-range #{envs['VLAN_SEGMENT']} \
         --aux-address 'bridge=#{envs['VLAN_BRIDGE_IP']}' \
         --aux-address 'bridge=#{envs['VLAN_PREFIX']}' \
         #{envs['VLAN_INTERFACE']}")
-      %x(docker network create -d macvlan -o parent=#{envs['DEFAULT_INTERFACE']} \
+      %x(docker network create -d macvlan -o parent=#{envs['INTERFACE']} \
         --subnet #{envs['HOST_SEGMENT']} \
         --gateway #{envs['GATEWAY_IP']} \
         --ip-range #{envs['VLAN_SEGMENT']} \
