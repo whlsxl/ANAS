@@ -56,11 +56,5 @@ module Anas
       
       return new_envs
     end
-
-    def start
-      %x(mkdir -p #{@envs['DATA_PATH']}/ddns)
-      %x(sudo chown -R #{@envs['PUID']}:#{@envs['PGID']} #{@envs['DATA_PATH']}/ddns)
-      super
-    end
   end
 end

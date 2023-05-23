@@ -16,7 +16,7 @@ module Anas
         'SAMBA_DC_USER_MAX_PASS_LENGTH', 'SAMBA_DC_LOG_LEVEL',
       ]
       @default_envs = {'SAMBA_DC_APP_FILTER' => 'false', 'SAMBA_DC_CREATE_STRUCTURE' => 'true',
-        'SAMBA_DC_ADMIN_NAME' => 'Administrator', 'SAMBA_DC_TEMPLATE_SHELL' => '/bin/false',
+        'SAMBA_DC_ADMIN_NAME' => 'admin', 'SAMBA_DC_TEMPLATE_SHELL' => '/bin/false',
         'SAMBA_DC_TEMPLATE_HOMEDIR' => '/home/%D/%U', 'SAMBA_DC_DOMAIN_USERS_GID_NUMBER' => 10000,
         'SAMBA_DC_USER_COMPLEX_PASS' => true, 'SAMBA_DC_USER_MAX_PASS_AGE' => 70, 
         'SAMBA_DC_USER_MIN_PASS_LENGTH' => 7, 'SAMBA_DC_LOG_LEVEL' => 1,

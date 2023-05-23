@@ -7,11 +7,6 @@ services:
     restart: unless-stopped
     env_file:
       - .env
-    environment:
-      - PUID
-      - PGID
-      - MYSQL_ROOT_PASSWORD
-      - TZ
     volumes:
       - "${DATA_PATH}/mysql:/config"
 networks:

@@ -1,4 +1,4 @@
-FROM crazymax/nextcloud:23.0.3
+FROM crazymax/nextcloud:26.0.1
 LABEL maintainer="Hailong"
 
-COPY 10-occ.sh 03-config_extra.sh /etc/cont-init.d/
+COPY root/ /
