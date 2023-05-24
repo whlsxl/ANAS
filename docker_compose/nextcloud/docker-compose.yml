@@ -7,6 +7,8 @@ services:
     container_name: ${CONTAINER_PREFIX}nextcloud
     volumes:
       - "${NEXTCLOUD_PATH}:/data"
+    dns: 
+      - $HOST_IP
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.nextcloud.entrypoints=https"
@@ -29,8 +31,6 @@ services:
       - "traefik.http.middlewares.nextcloud-header.headers.customRequestHeaders.X-Forwarded-Proto=https"
     env_file:
       - .env
-    # environment:
-    #   - "REAL_IP_FROM=${TRAEFIK_CONTAINER_NAME}"
     restart: unless-stopped
     networks:
       - mysql
@@ -97,6 +97,9 @@ networks:
   default:
     driver: bridge
     name: nextcloud
+    enable_ipv6: true
+    driver_opts:
+      com.docker.network.enable_ipv6: "true"
   mysql:
     name: mysql
     external: true

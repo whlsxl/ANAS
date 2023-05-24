@@ -48,7 +48,7 @@ add_to_group() { # $1 group name, $2 object name
 # waiting for samba startup
 sleep 20
 
-# set `Domain Users` group gidNumber
+# set 'Domain Users' group gidNumber
 if [ -z $(get_group_attr "Domain Users" gidNumber) ]; then
   echo "Set 'Domain Users' gidNumber: $SAMBA_DC_DOMAIN_USERS_GID_NUMBER"
   echo  $(samba-tool group addunixattrs 'Domain Users' $SAMBA_DC_DOMAIN_USERS_GID_NUMBER)
@@ -66,18 +66,6 @@ if [ $SAMBA_DC_APP_FILTER == "true" ]; then
   done
 fi
 
-deal with Administrator
-if [ ! -z "$SAMBA_DC_ADMIN_NAME" ]; then
-  echo "Deal with Administrator"
-  sAMAccountName=$( get_attribute_dn 'description=Built-in account for administering the computer/domain' sAMAccountName )
-  if [ $sAMAccountName == $SAMBA_DC_ADMIN_NAME ]; then
-    echo "Administrator name already: $SAMBA_DC_ADMIN_NAME "
-  else
-    echo "Administrator rename $sAMAccountName => $SAMBA_DC_ADMIN_NAME"
-    echo $(samba-tool user rename $sAMAccountName --samaccountname=$SAMBA_DC_ADMIN_NAME)
-  fi
-fi
-
 # auto create ldap structure
 if [ $SAMBA_DC_CREATE_STRUCTURE == "true" ]; then
   echo "Create basic structure ou & group"
@@ -88,13 +76,39 @@ if [ $SAMBA_DC_CREATE_STRUCTURE == "true" ]; then
   echo "Craete groups, Role & Access"
   create_ou "OU=Role" "OU=Groups,$SAMBA_DC_BASE_DN" "Role"
   create_ou "OU=Access" "OU=Groups,$SAMBA_DC_BASE_DN" "Access"
-  echo "Create `Unix Admins`"
   APP_BASE="OU=Role,OU=Groups"
+
+  echo "Create Group Admins"
+  create_group "Admins" $APP_BASE "The Administrators use by apps"
+  add_to_group "Administrators" "Admins"
+
+  echo "Create Group Unix Admins"
   create_group "Unix Admins" $APP_BASE "Unix Admins"
   add_to_group "Administrators" "Unix Admins"
-  echo net rpc rights grant "$SAMBA_DC_WORKGROUP\Unix Admins" SeDiskOperatorPrivilege -U "$SAMBA_DC_ADMIN_NAME%******"
-  net rpc rights grant "$SAMBA_DC_WORKGROUP\Unix Admins" SeDiskOperatorPrivilege -U "$SAMBA_DC_ADMIN_NAME%$SAMBA_DC_ADMIN_PASSWORD"
+
+  echo net rpc rights grant "$SAMBA_DC_WORKGROUP\Unix Admins" SeDiskOperatorPrivilege -U "$SAMBA_DC_ADMINISTRATOR_NAME%******"
+  net rpc rights grant "$SAMBA_DC_WORKGROUP\Unix Admins" SeDiskOperatorPrivilege -U "$SAMBA_DC_ADMINISTRATOR_NAME%$SAMBA_DC_ADMINISTRATOR_PASSWORD"
   # create_ou "OU=Computer" "OU=Groups,$SAMBA_DC_BASE_DN" "Computer"
+fi
+
+# deal with admin
+if [ ! -z "$SAMBA_DC_ADMIN_NAME" ]; then
+  echo "Deal with admin"
+  sAMAccountName=$( get_attribute_dn sAMAccountName=$SAMBA_DC_ADMIN_DN sAMAccountName )
+  if [ "$sAMAccountName" == "$SAMBA_DC_ADMIN_NAME" ]; then
+    echo "$SAMBA_DC_ADMIN_NAME user already exist "
+  else
+    echo "Create $SAMBA_DC_ADMIN_DN"
+    echo $(samba-tool user add $SAMBA_DC_ADMIN_NAME $SAMBA_DC_ADMIN_PASSWORD --userou=$SAMBA_DC_BASE_USERS_DN_PREFIX)
+  fi
+  echo "Reset $SAMBA_DC_ADMIN_DN password"
+  echo $(samba-tool user setpassword $SAMBA_DC_ADMIN_NAME --newpassword=$SAMBA_DC_ADMIN_PASSWORD)
+  add_to_group "Domain Admins" $SAMBA_DC_ADMIN_NAME
+  add_to_group "Schema Admins" $SAMBA_DC_ADMIN_NAME
+  add_to_group "Enterprise Admins" $SAMBA_DC_ADMIN_NAME
+  add_to_group "Group Policy Creator Owners" $SAMBA_DC_ADMIN_NAME 
+  add_to_group "Administrators" $SAMBA_DC_ADMIN_NAME 
+  add_to_group "Admins" $SAMBA_DC_ADMIN_NAME 
 fi
 
 # samba password rule
@@ -118,11 +132,13 @@ echo "Set Samba DC user password complex: $SAMBA_DC_USER_COMPLEX_PASS"
 #TODO: fix password rule
 echo $(samba-tool domain passwordsettings pso create "pso_administrator" 1 --min-pwd-length=7  --complexity=on \
               --history-length=0 --min-pwd-age=0 --max-pwd-age=0) 
-admin_pso="$(samba-tool domain passwordsettings pso show-user $SAMBA_DC_ADMIN_NAME)"
+admin_pso="$(samba-tool domain passwordsettings pso show-user $SAMBA_DC_ADMINISTRATOR_NAME)"
 if [[ "$admin_pso" != *"pso_administrator"* ]]; then
   echo "Apply administrator user password rule"  
-  echo $(samba-tool domain passwordsettings pso apply "pso_administrator" $SAMBA_DC_ADMIN_NAME)
+  echo $(samba-tool domain passwordsettings pso apply "pso_administrator" $SAMBA_DC_ADMINISTRATOR_NAME)
 fi
 
 # change dsheuristics to allow user modify password
 samba-tool forest directory_service dsheuristics 000000001
+
+echo "The structure has been set up."

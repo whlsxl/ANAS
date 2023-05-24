@@ -21,12 +21,12 @@ if [ ! -f /var/lib/samba/registry.tdb ]; then
 
   if [ $SAMBA_DC_DOMAIN_ACTION == provision ]; then
     PROVISION_OPTS="--server-role=dc --use-rfc2307 --domain=$SAMBA_DC_WORKGROUP \
-    --realm=$SAMBA_DC_REALM --adminpass='$SAMBA_DC_ADMIN_PASSWORD'"
+    --realm=$SAMBA_DC_REALM --adminpass='$SAMBA_DC_ADMINISTRATOR_PASSWORD'"
     PROVISION_OPTS_ECHO="--server-role=dc --use-rfc2307 --domain=$SAMBA_DC_WORKGROUP \
     --realm=$SAMBA_DC_REALM --adminpass='*****'"
   elif [ $SAMBA_DC_DOMAIN_ACTION == join ]; then
-    PROVISION_OPTS="$SAMBA_DC_REALM DC -UAdministrator --password='$SAMBA_DC_ADMIN_PASSWORD'"
-    PROVISION_OPTS_ECHO="$SAMBA_DC_REALM DC -UAdministrator --password='*****'"
+    PROVISION_OPTS="$SAMBA_DC_REALM DC -U$SAMBA_DC_ADMINISTRATOR_NAME --password='$SAMBA_DC_ADMINISTRATOR_PASSWORD'"
+    PROVISION_OPTS_ECHO="$SAMBA_DC_REALM DC -U$SAMBA_DC_ADMINISTRATOR_NAME --password='*****'"
   else
     echo 'Only provision and join actions are supported.'
     exit 1

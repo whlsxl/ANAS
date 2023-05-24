@@ -17,7 +17,7 @@ module Anas
       @optional_envs = ['DATA_PATH', 'TZ', 'CONTAINER_PREFIX',
         'IMAGE_PREFIX', 'DEFAULT_SERVICE_ROOT_PASSWORD', 'PUID', 'PGID',
         'BASICAUTH_USER', 'BASICAUTH_PASSWD', 'DEFAULT_LANGUAGE', 'CHINESE_SPEEDUP',
-        'USE_DEFAULT_DOMAIN',
+        'USE_DEFAULT_DOMAIN', 'SERVER_NAME',
         # IP
         'HOST_IP',
         # DNS
@@ -81,6 +81,14 @@ module Anas
     def cal_envs(envs)
       new_envs = @perpare_envs.merge(envs)
       new_envs['DOCKER_ALPINE_VERSION'] = "3.15"
+
+      if envs.has_key?('SERVER_NAME')
+        new_envs['SERVER_NAME'] = envs['SERVER_NAME'].to_s.upcase
+      else
+        hostname = %x( hostname -s )
+        new_envs['SERVER_NAME'] = hostname.strip.to_s.upcase
+      end
+      
       new_envs['DEFAULT_SERVICE_ROOT_PASSWORD'] = envs['DEFAULT_ROOT_PASSWORD'] unless envs.has_key?('DEFAULT_SERVICE_ROOT_PASSWORD')
       unless envs.has_key?('BASICAUTH_HTPASSWD')
         pass = envs['BASICAUTH_PASSWD'] 

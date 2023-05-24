@@ -26,7 +26,9 @@ module Anas
       new_envs = envs
       new_envs['NEXTCLOUD_PATH'] = "#{envs['DATA_PATH']}/nextcloud" unless envs.has_key?('NEXTCLOUD_PATH')
       new_envs['NEXTCLOUD_DOMAIN'] = "#{envs['NEXTCLOUD_DOMAIN_PREFIX']}.#{envs['BASE_DOMAIN']}"
-      new_envs['NEXTCLOUD_ADMIN_USERNAME'] = envs['SAMBA_DC_ADMIN_NAME'] unless envs.has_key?('NEXTCLOUD_ADMIN_USERNAME')
+      # avoid conflit with samba admin user
+      # TODO: change name
+      new_envs['NEXTCLOUD_ADMIN_USERNAME'] = "#{envs['SAMBA_DC_ADMIN_NAME']}_nc" unless envs.has_key?('NEXTCLOUD_ADMIN_USERNAME')
       new_envs['NEXTCLOUD_ADMIN_PASSWORD'] = envs['DEFAULT_ROOT_PASSWORD'] unless envs.has_key?('NEXTCLOUD_ADMIN_PASSWORD')
       unless envs['NEXTCLOUD_USER_FILTER']
         if envs['SAMBA_DC_APP_FILTER'] == 'true'

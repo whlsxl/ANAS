@@ -6,9 +6,10 @@ module Anas
 
     def self.init
       super
-      @required_envs = ['SAMBA_DC_ADMIN_PASSWORD',
-      ]
-      @optional_envs = ['SAMBA_DC_REALM', 'SAMBA_DC_WORKGROUP', 
+      @required_envs = []
+      @optional_envs = [
+        'SAMBA_DC_ADMIN_PASSWORD', 'SAMBA_DC_ADMINISTRATOR_PASSWORD',
+        'SAMBA_DC_REALM', 'SAMBA_DC_WORKGROUP', 
         'SAMBA_DC_SERVER_STRING', 'SAMBA_DC_NETBIOS_NAME', 'SAMBA_DC_INTERFACES',
         'SAMBA_DC_APP_FILTER', 'SAMBA_DC_CREATE_STRUCTURE',
         'SAMBA_DC_ADMIN_NAME', 'SAMBA_DC_TEMPLATE_SHELL', 'SAMBA_DC_TEMPLATE_HOMEDIR',
@@ -37,13 +38,15 @@ module Anas
       if envs.has_key?('SAMBA_DC_NETBIOS_NAME')
         new_envs['SAMBA_DC_NETBIOS_NAME'] = envs['SAMBA_DC_NETBIOS_NAME'].to_s.upcase
       else
-        hostname = %x( hostname -s )
-        new_envs['SAMBA_DC_NETBIOS_NAME'] = hostname.strip.to_s.upcase
+        new_envs['SAMBA_DC_NETBIOS_NAME'] = envs['SERVER_NAME']
       end
       new_envs['SAMBA_DC_DC_NAME'] = new_envs['SAMBA_DC_NETBIOS_NAME'].to_s.downcase
       new_envs['SAMBA_DC_DC_DOMAIN'] = "#{new_envs['SAMBA_DC_DC_NAME']}.#{new_envs['SAMBA_DC_DOMAIN']}"
+      new_envs['SAMBA_DC_ADMINISTRATOR_NAME'] = 'Administrator'
       new_envs['SAMBA_DC_ADMIN_PASSWORD'] = envs['DEFAULT_ROOT_PASSWORD'] unless envs.has_key?('SAMBA_DC_ADMIN_PASSWORD')
+      new_envs['SAMBA_DC_ADMINISTRATOR_PASSWORD'] = envs['DEFAULT_ROOT_PASSWORD'] unless envs.has_key?('SAMBA_DC_ADMINISTRATOR_PASSWORD')
       new_envs['SAMBA_DC_LDAPS_SERVER_URL'] = "ldaps://#{envs['BASE_DOMAIN']}" unless envs.has_key?('SAMBA_DC_SERVER_FULL_URL')
+      new_envs['SAMBA_DC_HOST'] = envs['BASE_DOMAIN']
       new_envs['SAMBA_DC_LDAPS_PORT'] = "636"
       new_envs['SAMBA_DC_LDAPS_SERVER_URL_PORT'] = "#{envs['SAMBA_DC_LDAPS_SERVER_URL']}:#{envs['SAMBA_DC_LDAPS_PORT']}"
       domain = new_envs['SAMBA_DC_DOMAIN']
@@ -53,16 +56,29 @@ module Anas
       new_envs['SAMBA_DC_BASE_COMPUTERS_DN'] = "CN=Computers,#{new_envs['SAMBA_DC_BASE_DN']}"
       new_envs['SAMBA_DC_BASE_GROUPS_DN'] = "OU=Groups,#{new_envs['SAMBA_DC_BASE_DN']}"
       new_envs['SAMBA_DC_BASE_GROUPS_ROLE_DN'] = "OU=Role,#{new_envs['SAMBA_DC_BASE_GROUPS_DN']}"
-      new_envs['SAMBA_DC_BASE_USERS_DN'] = "OU=People,#{new_envs['SAMBA_DC_BASE_DN']}"
-      new_envs['SAMBA_DC_BASE_APP_DN'] = "OU=Apps,OU=Groups,#{new_envs['SAMBA_DC_BASE_DN']}"
-      new_envs['SAMBA_DC_ADMIN_DN'] = "CN=#{envs['SAMBA_DC_ADMIN_NAME']},CN=Users,#{new_envs['SAMBA_DC_BASE_DN']}"
+      new_envs['SAMBA_DC_BASE_USERS_DN_NAME'] = "People"
+      new_envs['SAMBA_DC_BASE_USERS_DN_PREFIX'] = "OU=#{new_envs['SAMBA_DC_BASE_USERS_DN_NAME']}"
+      new_envs['SAMBA_DC_BASE_USERS_DN'] = "#{new_envs['SAMBA_DC_BASE_USERS_DN_PREFIX']},#{new_envs['SAMBA_DC_BASE_DN']}"
+      new_envs['SAMBA_DC_BASE_APP_DN'] = "OU=Apps,#{new_envs['SAMBA_DC_BASE_GROUPS_DN']}"
+      new_envs['SAMBA_DC_ADMINISTRATOR_DN'] = "CN=#{new_envs['SAMBA_DC_ADMINISTRATOR_NAME']},CN=Users,#{new_envs['SAMBA_DC_BASE_DN']}"
+      new_envs['SAMBA_DC_ADMIN_DN'] = "CN=#{new_envs['SAMBA_DC_ADMIN_NAME']},#{new_envs['SAMBA_DC_BASE_USERS_DN']}"
+      new_envs['SAMBA_DC_ADMIN_GROUP_DN'] = "OU=Admins,#{new_envs['SAMBA_DC_BASE_GROUPS_ROLE_DN']}"
+      new_envs['SAMBA_DC_GROUP_CLASS_NAME'] = "group"
       new_envs['SAMBA_DC_GROUP_CLASS_FILTER'] = "(objectClass=group)"
       new_envs['SAMBA_DC_USER_CLASS_FILTER'] = "(objectClass=user)"
       new_envs['SAMBA_DC_USER_ENABLED_FILTER'] = "(!(userAccountControl:1.2.840.113556.1.4.803:=2))"
       new_envs['SAMBA_DC_USER_LOGIN_ATTRS'] = 'sAMAccountName,userPrincipalName,mail' unless envs.has_key?('SAMBA_DC_USER_LOGIN_ATTRS')
-      new_envs['SAMBA_DC_USER_DISPLAY_NAME'] = 'displayName'
+      new_envs['SAMBA_DC_USER_DISPLAY_NAME'] = 'sAMAccountName'
       new_envs['SAMBA_DC_GROUP_DISPLAY_NAME'] = 'name'
+      new_envs['SAMBA_DC_USER_EMAIL'] = 'mail'
       return new_envs
+    end
+
+    def check_envs(envs)
+      if envs['SAMBA_DC_ADMIN_NAME'] == envs['SAMBA_DC_ADMINISTRATOR_NAME']
+        raise EnvError.new("Samba admin user name can't be #{envs['SAMBA_DC_ADMINISTRATOR_NAME']}")
+      end
+      super
     end
 
     def module_envs(envs)
