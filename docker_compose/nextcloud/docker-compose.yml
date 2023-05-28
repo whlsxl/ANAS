@@ -7,6 +7,8 @@ services:
     container_name: ${CONTAINER_PREFIX}nextcloud
     volumes:
       - "${NEXTCLOUD_PATH}:/data"
+      - type: tmpfs
+        target: /tmp
     dns: 
       - $HOST_IP
     labels:
@@ -29,6 +31,8 @@ services:
       - "traefik.http.middlewares.nextcloud-header.headers.browserXssFilter=true"
       - "traefik.http.middlewares.nextcloud-header.headers.customFrameOptionsValue=SAMEORIGIN"
       - "traefik.http.middlewares.nextcloud-header.headers.customRequestHeaders.X-Forwarded-Proto=https"
+      - "traefik.http.middlewares.nextcloud-header.headers.customResponseHeaders.X-Robots-Tag=noindex,nofollow"
+      - "traefik.docker.network=traefik"
     env_file:
       - .env
     restart: unless-stopped

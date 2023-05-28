@@ -8,21 +8,21 @@ if [ "$SIDECAR_CRON" = "1" ] || [ "$SIDECAR_PREVIEWGEN" = "1" ] || [ "$SIDECAR_N
   exit 0
 fi
 
-echo "Setup apps"
-echo "Read config /data/setup.conf"
-
-conf="/data/setup.conf"
-if [ -f "$conf" ]; then
-  . "$conf"
+if [ "$NEXTCLOUD_RM_AUTOGEN_FILES" == "true" ]; then 
+  rm -rf /var/www/core/skeleton/*
+  mkdir /var/www/core/skeleton/Documents
+  mkdir /var/www/core/skeleton/Photos
 fi
+
+echo "Setup apps"
 
 # default_phone_region
 echo "Set default_phone_region => $NEXTCLOUD_PHONE_REGION"
 occ config:system:set default_phone_region --value=$NEXTCLOUD_PHONE_REGION
 
 # default_language
-echo "Set default_language => $DEFAULT_LANGUAGE"
-occ config:system:set default_language --value=$DEFAULT_LANGUAGE
+# echo "Set default_language => $DEFAULT_LANGUAGE"
+# occ config:system:set default_language --value=$DEFAULT_LANGUAGE
 
 # config domain
 echo "Set https https://$NEXTCLOUD_DOMAIN:$TREAFIK_BASE_PORT"
@@ -77,8 +77,39 @@ fi
 occ config:app:set password_policy expiration --value=$NEXTCLOUD_USER_MAX_PASS_AGE
 occ config:app:set password_policy minLength --value=$NEXTCLOUD_USER_MIN_PASS_LENGTH
 
-if [ "$NEXTCLOUD_RM_AUTOGEN_FILES" == "true" ]; then 
-  rm -rf /var/www/core/skeleton/*
-fi
+# trusted_proxies
+occ config:system:set trusted_proxies 0 --value=`ping traefik -c 1 | sed '1{s/[^(]*(//;s/).*//;q}'`
 
-# declare -p LDAP_CONFIG_NAME > "$conf"
+# Set log level
+occ log:manage --level $NEXTCLOUD_LOG_LEVEL
+occ config:system:set log_rotate_size --value="10485760" --type=integer
+
+# install apps
+$user_app_path=/var/www/userapps
+install_app() { # $1 filename, $2 app name
+  tar -xzf /root/$1 -C $user_app_path/$2
+  occ app:install $2
+}
+install_app "ldap_write_support-1.8.0.tar.gz" "ldap_write_support"
+occ config:app:set ldap_write_support template.user "dn: CN={UID},{BASE}\nobjectClass: user\nsAMAccountName: {UID}\nuserPrincipalName: {UID}@$BASE_DOMAIN\ncn: {UID}\nuserAccountControl: 512"
+
+
+waiting_admin() {
+  while :
+  do
+    echo "occ user:info $SAMBA_DC_ADMIN_NAME"
+    occ user:info $SAMBA_DC_ADMIN_NAME
+    if [[ $(echo $?) == 0 ]]; then
+      occ group:adduser admin $SAMBA_DC_ADMIN_NAME
+      return
+    fi
+    # force ldap update users
+    occ ldap:search $SAMBA_DC_ADMIN_NAME
+    echo "Waiting ldap admin user sync online..."
+    sleep 5
+  done
+}
+
+waiting_admin
+
+echo "Nextcloud tasks execute completed"

@@ -65,11 +65,14 @@ module Anas
       new_envs['SAMBA_DC_ADMIN_GROUP_DN'] = "OU=Admins,#{new_envs['SAMBA_DC_BASE_GROUPS_ROLE_DN']}"
       new_envs['SAMBA_DC_GROUP_CLASS_NAME'] = "group"
       new_envs['SAMBA_DC_GROUP_CLASS_FILTER'] = "(objectClass=group)"
+      new_envs['SAMBA_DC_USER_CLASS_NAME'] = "user"
       new_envs['SAMBA_DC_USER_CLASS_FILTER'] = "(objectClass=user)"
       new_envs['SAMBA_DC_USER_ENABLED_FILTER'] = "(!(userAccountControl:1.2.840.113556.1.4.803:=2))"
       new_envs['SAMBA_DC_USER_LOGIN_ATTRS'] = 'sAMAccountName,userPrincipalName,mail' unless envs.has_key?('SAMBA_DC_USER_LOGIN_ATTRS')
-      new_envs['SAMBA_DC_USER_DISPLAY_NAME'] = 'sAMAccountName'
+      new_envs['SAMBA_DC_USER_NAME'] = 'sAMAccountName'
+      new_envs['SAMBA_DC_USER_DISPLAY_NAME'] = 'displayName'
       new_envs['SAMBA_DC_GROUP_DISPLAY_NAME'] = 'name'
+      new_envs['SAMBA_DC_GROUP_MEMBER_ATTR'] = 'member'
       new_envs['SAMBA_DC_USER_EMAIL'] = 'mail'
       return new_envs
     end

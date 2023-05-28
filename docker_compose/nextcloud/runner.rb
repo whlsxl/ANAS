@@ -14,10 +14,13 @@ module Anas
         'NEXTCLOUD_ADMIN_USERNAME', 'NEXTCLOUD_USER_FILTER',
         'NEXTCLOUD_DEFAULT_QUOTA', 'NEXTCLOUD_PATH', 'NEXTCLOUD_USER_MIN_PASS_LENGTH',
         'NEXTCLOUD_USER_COMPLEX_PASS', 'NEXTCLOUD_USER_MAX_PASS_AGE', 'NEXTCLOUD_RM_AUTOGEN_FILES',
+        'NEXTCLOUD_LOG_LEVEL', 'NEXTCLOUD_MEMORY_LIMIT', 'NEXTCLOUD_UPLOAD_MAX_SIZE',
       ]
       @default_envs = {
         'NEXTCLOUD_DOMAIN_PREFIX' => 'nc', 'NEXTCLOUD_DB_NAME' => 'nextcloud',
         'NEXTCLOUD_PHONE_REGION' => 'CN', 'NEXTCLOUD_RM_AUTOGEN_FILES' => true,
+        'NEXTCLOUD_LOG_LEVEL' => '2', 'NEXTCLOUD_MEMORY_LIMIT' => '1G',
+        'NEXTCLOUD_UPLOAD_MAX_SIZE' => '16G',
       }
       @dependent_mods = ['mysql', 'redis', 'traefik']
     end
@@ -34,7 +37,7 @@ module Anas
         if envs['SAMBA_DC_APP_FILTER'] == 'true'
           new_envs['NEXTCLOUD_USER_FILTER'] = "(&#{envs['SAMBA_DC_USER_CLASS_FILTER']}(memberOf=CN=APP_nextcloud,#{envs['SAMBA_DC_BASE_APP_DN']}))"
         else
-          new_envs['NEXTCLOUD_USER_FILTER'] = envs['SAMBA_DC_USER_CLASS_FILTER']
+          new_envs['NEXTCLOUD_USER_FILTER'] = "(&#{envs['SAMBA_DC_USER_CLASS_FILTER']})"
         end
       end
       unless envs['NEXTCLOUD_USER_LOGIN_FILTER']
@@ -75,8 +78,8 @@ module Anas
 
     def module_envs(envs)
       new_envs = envs
-      new_envs['MEMORY_LIMIT'] = '512M'
-      new_envs['UPLOAD_MAX_SIZE'] = '2048M'
+      new_envs['MEMORY_LIMIT'] = envs['NEXTCLOUD_MEMORY_LIMIT']
+      new_envs['UPLOAD_MAX_SIZE'] = envs['NEXTCLOUD_UPLOAD_MAX_SIZE']
       new_envs['OPCACHE_MEM_SIZE'] = '128'
       new_envs['APC_SHM_SIZE'] = '128M'
       new_envs['REAL_IP_HEADER'] = 'X-Forwarded-For'

@@ -34,5 +34,3 @@ echo "Waiting LDAP online"
 waiting_port $SAMBA_DC_HOST $SAMBA_DC_LDAPS_PORT
 
 bash -c "/usr/local/bin/task.sh"
-
-echo "Nextcloud tasks execute completed"

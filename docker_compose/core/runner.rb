@@ -30,7 +30,7 @@ module Anas
       @default_envs = {'DATA_PATH' => '~/data', 'TZ' => 'Asia/Hong_Kong', 
         'CONTAINER_PREFIX' => 'anas_', 'IMAGE_PREFIX' => 'anas_',
         'PUID' => 1000, 'PGID' => 1000, 'BASICAUTH_USER' => 'admin',
-        'DEFAULT_LANGUAGE' => 'zh', 'CHINESE_SPEEDUP' => 'false',
+        'DEFAULT_LANGUAGE' => 'zh-cn', 'CHINESE_SPEEDUP' => 'false',
         'USE_DEFAULT_DOMAIN' => 'yes', 
 
         # DNS
