@@ -257,6 +257,7 @@ module Anas
       end
     end
 
+    # Append new envs in .env file
     def append_envs(new_envs)
       env_file = File.expand_path(".env", @working_path)
       Log.info("Append envs file #{env_file}")

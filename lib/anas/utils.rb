@@ -384,7 +384,7 @@ module Anas
       dependent_tree = @dependent_tree
       return dependent_tree.process_mods(mods, {}) do |mod_name, node, missing_envs|
         runner = node.runner
-        missing = runner.check_envs(runner.envs)
+        missing = runner.check_envs(envs)
         missing_envs[mod_name] = missing unless missing.empty?
         missing_envs
       end
@@ -396,10 +396,18 @@ module Anas
       return dependent_tree.process_mods(mods, envs) do |mod_name, node, envs|
         runner = node.runner
         new_envs = runner.cal_envs(envs)
-        new_envs_clone = new_envs.clone
-        runner.envs = new_envs_clone
-        runner.gen_files(new_envs_clone)
         new_envs
+      end
+    end
+
+    def gen_files(mods, envs)
+      Log.info("Genarate files by envs")
+      dependent_tree = @dependent_tree
+      return dependent_tree.process_mods(mods) do |mod_name, node|
+        runner = node.runner
+        envs_clone = envs.clone
+        runner.envs = envs_clone
+        runner.gen_files(envs_clone)
       end
     end
 
@@ -480,13 +488,13 @@ module Anas
         raise NoENVError.new(missing_envs)
       end
       domains = dependent_tree.domains(envs)
-      new_envs = {}
-      new_envs["DOMAINS"] = domains.map { |domain| domain.join('/') }.join(',')
-      dependent_tree.process_mods(mods) do |mod_name, node|
-        runner = node.runner
-        runner.append_envs(new_envs)
-      end
-      return envs.merge(new_envs)
+      envs["DOMAINS"] = domains.map { |domain| domain.join('/') }.join(',')
+      # dependent_tree.process_mods(mods) do |mod_name, node|
+      #   runner = node.runner
+      #   runner.append_envs(new_envs)
+      # end
+      gen_files(mods, envs)
+      return envs
     end
 
     def sync_tmp!(tmp,release)
