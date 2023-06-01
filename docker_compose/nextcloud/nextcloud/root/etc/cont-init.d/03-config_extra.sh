@@ -19,5 +19,5 @@ if [ -f /var/www/config/autoconfig.php ] ; then
 fi
 
 echo "Set hosts"
-traefik_ip=`ping $TRAEFIK_HOST_NAME -c 1 | sed '1{s/[^(]*(//;s/).*//;q}'`
+traefik_ip=`ping $TRAEFIK_HOSTNAME -c 1 | sed '1{s/[^(]*(//;s/).*//;q}'`
 set_host $COLLABORA_DOMAIN $traefik_ip
