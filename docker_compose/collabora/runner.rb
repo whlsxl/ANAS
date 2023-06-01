@@ -10,10 +10,12 @@ module Anas
       @required_envs = []
       @optional_envs = [
         'COLLABORA_DOMAIN_PREFIX', 'COLLABORA_LOG_LEVEL', 'COLLABORA_DOMAIN_INTERFACE',
+        'COLLABORA_AUTO_SAVE',
       ]
       @default_envs = {
         'COLLABORA_DOMAIN_PREFIX' => 'collabora', 'COLLABORA_LOG_LEVEL' => 'warning',
-        'COLLABORA_DOMAIN_INTERFACE' => 'default',
+        'COLLABORA_INTERFACE' => 'default', 'COLLABORA_HOSTNAME' => 'collabora',
+        'COLLABORA_AUTO_SAVE' => '60',
       }
       @dependent_mods = ['traefik']
     end
@@ -22,6 +24,7 @@ module Anas
       new_envs = envs
       new_envs['COLLABORA_DOMAIN'] = "#{envs['COLLABORA_DOMAIN_PREFIX']}.#{envs['BASE_DOMAIN']}"
       new_envs['COLLABORA_DOMAIN_PORT'] = "#{new_envs['COLLABORA_DOMAIN']}:#{new_envs['TREAFIK_BASE_PORT']}"
+      new_envs['COLLABORA_DOMAIN_FULL'] = "https://#{new_envs['COLLABORA_DOMAIN_PORT']}"
       return new_envs
     end
 
@@ -32,13 +35,13 @@ module Anas
       new_envs['ADMIN_USER'] = envs['SAMBA_DC_ADMIN_NAME']
       new_envs['ADMIN_PASS'] = envs['DEFAULT_ROOT_PASSWORD']
       new_envs['ALLOWED_HOSTS'] = "#{envs['NEXTCLOUD_DOMAIN_FULL']}"
-      new_envs['INTERFACE'] = envs['COLLABORA_DOMAIN_INTERFACE']
+      new_envs['INTERFACE'] = envs['COLLABORA_INTERFACE']
       new_envs['LOG_TYPE'] = 'CONSOLE'
       new_envs['LOG_LEVEL'] = envs['COLLABORA_LOG_LEVEL']
       new_envs['ENABLE_TLS'] = 'FALSE'
       new_envs['ENABLE_TLS_CERT_GENERATE'] = 'FALSE'
       new_envs['ENABLE_TLS_REVERSE_PROXY'] = 'TRUE'
-      new_envs['AUTO_SAVE'] = '30'
+      new_envs['AUTO_SAVE'] = envs['COLLABORA_AUTO_SAVE']
       new_envs['HOSTNAME'] = envs['COLLABORA_DOMAIN_PORT']
       new_envs['FRAME_ANCESTORS'] = 'https://*'
       new_envs['ENABLE_CLEANUP'] = 'true'

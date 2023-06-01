@@ -11,10 +11,6 @@ if [ ! -f /etc/timezone ] && [ ! -z "$TZ" ]; then
   echo $TZ >/etc/timezone
 fi
 
-if [ -z "$SAMBA_DC_INTERFACES" ]; then # bind interfaces empty, use default route
-  export SAMBA_DC_INTERFACES=$(echo $(/sbin/ip route | awk '/default/ { print $5 }'))
-fi
-
 if [ ! -f /var/lib/samba/registry.tdb ]; then
   INTERFACE_OPTS="--option=\"bind interfaces only=$SAMBA_DC_BIND_INTERFACES_ONLY\" \
       --option=\"interfaces=$SAMBA_DC_INTERFACES\""

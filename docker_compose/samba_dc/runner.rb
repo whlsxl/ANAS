@@ -14,7 +14,7 @@ module Anas
         'SAMBA_DC_APP_FILTER', 'SAMBA_DC_CREATE_STRUCTURE',
         'SAMBA_DC_ADMIN_NAME', 'SAMBA_DC_TEMPLATE_SHELL', 'SAMBA_DC_TEMPLATE_HOMEDIR',
         'SAMBA_DC_DOMAIN_USERS_GID_NUMBER', 'SAMBA_DC_USER_COMPLEX_PASS', 'SAMBA_DC_USER_MAX_PASS_AGE',
-        'SAMBA_DC_USER_MAX_PASS_LENGTH', 'SAMBA_DC_LOG_LEVEL',
+        'SAMBA_DC_USER_MAX_PASS_LENGTH', 'SAMBA_DC_LOG_LEVEL', 'SAMBA_DC_USER_PRINCIPAL_NAME_BASE_DOMAIN',
       ]
       @default_envs = {'SAMBA_DC_APP_FILTER' => 'false', 'SAMBA_DC_CREATE_STRUCTURE' => 'true',
         'SAMBA_DC_ADMIN_NAME' => 'admin', 'SAMBA_DC_TEMPLATE_SHELL' => '/bin/false',
@@ -74,6 +74,8 @@ module Anas
       new_envs['SAMBA_DC_GROUP_DISPLAY_NAME'] = 'name'
       new_envs['SAMBA_DC_GROUP_MEMBER_ATTR'] = 'member'
       new_envs['SAMBA_DC_USER_EMAIL'] = 'mail'
+      new_envs['SAMBA_DC_USER_PRINCIPAL_NAME_BASE_DOMAIN'] = envs['BASE_DOMAIN'] unless envs.has_key?('SAMBA_DC_USER_PRINCIPAL_NAME_BASE_DOMAIN')
+      new_envs['SAMBA_DC_INTERFACES'] = envs['INTERFACE'] unless envs.has_key?('SAMBA_DC_INTERFACES')
       return new_envs
     end
 
