@@ -1,4 +1,8 @@
-#!/usr/bin/with-contenv bash
+#!/command/with-contenv bash
+
+source /assets/functions/00-container
+output_off
+PROCESS_NAME="hosts"
 
 set_host() { # $1 domain, $2 ip
   echo "Set $2 $1"
@@ -10,14 +14,9 @@ set_host() { # $1 domain, $2 ip
   fi
 }
 
-if [ "$SIDECAR_CRON" = "1" ] || [ "$SIDECAR_PREVIEWGEN" = "1" ] || [ "$SIDECAR_NEWSUPDATER" = "1" ]; then
-  exit 0
-fi
-
-if [ -f /var/www/config/autoconfig.php ] ; then
-  rm /var/www/config/autoconfig.php
-fi
-
 echo "Set hosts"
 traefik_ip=`ping $TRAEFIK_HOST_NAME -c 1 | sed '1{s/[^(]*(//;s/).*//;q}'`
-set_host $COLLABORA_DOMAIN $traefik_ip
+set_host $NEXTCLOUD_DOMAIN $traefik_ip
+
+liftoff 
+output_on

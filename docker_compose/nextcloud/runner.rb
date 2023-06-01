@@ -20,7 +20,7 @@ module Anas
         'NEXTCLOUD_DOMAIN_PREFIX' => 'nc', 'NEXTCLOUD_DB_NAME' => 'nextcloud',
         'NEXTCLOUD_PHONE_REGION' => 'CN', 'NEXTCLOUD_RM_AUTOGEN_FILES' => true,
         'NEXTCLOUD_LOG_LEVEL' => '2', 'NEXTCLOUD_MEMORY_LIMIT' => '1G',
-        'NEXTCLOUD_UPLOAD_MAX_SIZE' => '16G',
+        'NEXTCLOUD_UPLOAD_MAX_SIZE' => '16G', 'NEXTCLOUD_HOSTNAME' => 'nextcloud',
       }
       @dependent_mods = ['mysql', 'redis', 'traefik']
     end
@@ -29,6 +29,8 @@ module Anas
       new_envs = envs
       new_envs['NEXTCLOUD_PATH'] = "#{envs['DATA_PATH']}/nextcloud" unless envs.has_key?('NEXTCLOUD_PATH')
       new_envs['NEXTCLOUD_DOMAIN'] = "#{envs['NEXTCLOUD_DOMAIN_PREFIX']}.#{envs['BASE_DOMAIN']}"
+      new_envs['NEXTCLOUD_DOMAIN_PORT'] = "#{envs['NEXTCLOUD_DOMAIN']}:#{envs['TREAFIK_BASE_PORT']}"
+      new_envs['NEXTCLOUD_DOMAIN_FULL'] = "https://#{envs['NEXTCLOUD_DOMAIN_PORT']}"
       # avoid conflit with samba admin user
       # TODO: change name
       new_envs['NEXTCLOUD_ADMIN_USERNAME'] = "#{envs['SAMBA_DC_ADMIN_NAME']}_nc" unless envs.has_key?('NEXTCLOUD_ADMIN_USERNAME')

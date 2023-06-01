@@ -78,20 +78,25 @@ occ config:app:set password_policy expiration --value=$NEXTCLOUD_USER_MAX_PASS_A
 occ config:app:set password_policy minLength --value=$NEXTCLOUD_USER_MIN_PASS_LENGTH
 
 # trusted_proxies
-occ config:system:set trusted_proxies 0 --value=`ping traefik -c 1 | sed '1{s/[^(]*(//;s/).*//;q}'`
+occ config:system:set trusted_proxies 0 --value=`ping $TRAEFIK_HOST_NAME -c 1 | sed '1{s/[^(]*(//;s/).*//;q}'`
 
 # Set log level
 occ log:manage --level $NEXTCLOUD_LOG_LEVEL
 occ config:system:set log_rotate_size --value="10485760" --type=integer
 
 # install apps
-$user_app_path=/var/www/userapps
-install_app() { # $1 filename, $2 app name
-  tar -xzf /root/$1 -C $user_app_path/$2
-  occ app:install $2
-}
-install_app "ldap_write_support-1.8.0.tar.gz" "ldap_write_support"
-occ config:app:set ldap_write_support template.user "dn: CN={UID},{BASE}\nobjectClass: user\nsAMAccountName: {UID}\nuserPrincipalName: {UID}@$BASE_DOMAIN\ncn: {UID}\nuserAccountControl: 512"
+user_app_path='/var/www/userapps'
+# install_app() { # $1 filename, $2 app name
+#   tar -xzf /root/$1 -C $user_app_path/$2
+#   occ app:install $2
+# }
+# collectives notes memories deck tasks ncdownloader news maps passwords forms groupfolders calendar impersonate polls tables bookmarks 
+# files_markdown camerarawpreviews files_pdfviewer previewgenerator files_lock files_retention quota_warning files_texteditor 
+# files_accesscontrol
+# files_automatedtagging flow_notifications drawio workflow_script unsplash approval
+# Mastodon Jira OpenProject Mattermost Jitsi 
+# install_app "ldap_write_support-1.8.0.tar.gz" "ldap_write_support"
+# occ config:app:set ldap_write_support template.user "dn: CN={UID},{BASE}\nobjectClass: user\nsAMAccountName: {UID}\nuserPrincipalName: {UID}@$BASE_DOMAIN\ncn: {UID}\nuserAccountControl: 512"
 
 
 waiting_admin() {
