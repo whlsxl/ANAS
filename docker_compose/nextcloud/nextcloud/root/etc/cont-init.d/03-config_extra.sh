@@ -21,3 +21,27 @@ fi
 echo "Set hosts"
 traefik_ip=`ping $TRAEFIK_HOSTNAME -c 1 | sed '1{s/[^(]*(//;s/).*//;q}'`
 set_host $COLLABORA_DOMAIN $traefik_ip
+
+# domain_write_to_hosts() { # $1 domain
+#   ip=$( ping $1 -c 1 | sed '1{s/[^(]*(//;s/).*//;q}')
+#   if grep -q $1 "/etc/hosts"; then
+#     hosts=$( sed "s/.*$1.*/$ip\t$1/" "/etc/hosts" )
+#     echo "$hosts" > "/etc/hosts"
+#   else
+#     echo -e "$ip\t$1" >> "/etc/hosts"
+#   fi
+# }
+
+# domain_write_to_hosts $MYSQL_HOST
+
+# config_in_file() { # $1 filename, $2 search string, $3 config string
+#   if grep -q $2 "$1"; then
+#     hosts=$( sed "s/.*$2.*/$3/" "$1" )
+#     echo "$hosts" > "$1"
+#   else
+#     echo -e "$3" >> "$1"
+#   fi
+# }
+
+# echo "Setting DNS server to $LOCAL_DNS_SERVER"
+# config_in_file /etc/resolv.conf 'nameserver' "nameserver $LOCAL_DNS_SERVER"

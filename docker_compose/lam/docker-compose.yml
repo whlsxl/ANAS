@@ -6,6 +6,8 @@ services:
     image: ${IMAGE_PREFIX}lam:latest
     container_name: ${CONTAINER_PREFIX}lam
     restart: unless-stopped
+    dns:
+      - ${LOCAL_DNS_SERVER}
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.lam.entrypoints=https"

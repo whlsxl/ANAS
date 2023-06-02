@@ -9,6 +9,8 @@ services:
       - "${NEXTCLOUD_PATH}:/data"
       - type: tmpfs
         target: /tmp
+    dns:
+      - ${LOCAL_DNS_SERVER}
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.nextcloud.entrypoints=https"

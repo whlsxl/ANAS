@@ -21,9 +21,13 @@ waiting_port() { # $1 url, $2 port
 install_until_succ() {
   while :
   do
-    occ maintenance:install --database "mysql" --database-host "$MYSQL_HOST_FULL" --database-name "$NEXTCLOUD_DB_NAME"  --database-user "$MYSQL_USERNAME" --database-pass "$MYSQL_PASSWORD" --admin-user "$NEXTCLOUD_ADMIN_USERNAME" --admin-pass "$NEXTCLOUD_ADMIN_PASSWORD" --data-dir "/data/data"
+    result=$( occ maintenance:install --database "mysql" --database-host "$MYSQL_HOST_FULL" --database-name "$NEXTCLOUD_DB_NAME"  --database-user "$MYSQL_USERNAME" --database-pass "$MYSQL_PASSWORD" --admin-user "$NEXTCLOUD_ADMIN_USERNAME" --admin-pass "$NEXTCLOUD_ADMIN_PASSWORD" --data-dir "/data/data" 2>&1 >/dev/null)
     if [[ $(echo $?) == 0 ]]; then
       echo "Nextcloud init successed"
+      return
+    fi
+    if [[ $result == *'Command "maintenance:install" is not defined.'* ]]; then
+      echo "Nextcloud already installed"
       return
     fi
   sleep 5

@@ -40,7 +40,7 @@ module Anas
         'SHARE_GUEST_OK' => 'Yes',
       }
       currentDNS = Resolv::DNS::Config.default_config_hash[:nameserver]
-      @default_envs['LOCAL_DNS_SERVER'] = currentDNS.join(' ')
+      @default_envs['HOST_DNS_SERVER'] = currentDNS.join(' ')
       @dependent_mods = []
     end
     
@@ -173,6 +173,7 @@ module Anas
       # Use host ip as vlan gataway
       new_envs['VLAN_GATEWAY_IP'] = new_envs['HOST_IP']
       new_envs['VLAN_INTERFACE'] = 'anas_macvlan'
+      new_envs['LOCAL_DNS_SERVER'] = new_envs['HOST_IP']
       # dirs
       new_envs['USERDATA_PATH'] = File.expand_path(envs['USERDATA_NAME'], envs['DATA_PATH']) unless envs.has_key?('USERDATA_PATH')
       new_envs['DOWNLOAD_DIR_NAME'] = "Downloads"

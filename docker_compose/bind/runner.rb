@@ -16,7 +16,7 @@ module Anas
     def cal_envs(envs)
       new_envs = envs
       unless envs.has_key?('BIND_DNS_FORWARDER')
-        new_envs['BIND_DNS_FORWARDER'] = "#{envs['LOCAL_DNS_SERVER'].split(' ').join(';')};"
+        new_envs['BIND_DNS_FORWARDER'] = "#{envs['HOST_DNS_SERVER'].split(' ').join(';')};"
       end
       new_envs['BIND_HOST_IP'] = envs['HOST_IP']
       return new_envs

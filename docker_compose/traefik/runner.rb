@@ -20,6 +20,8 @@ module Anas
       new_envs = envs
       new_envs['TRAEFIK_HOSTNAME'] = "traefik"
       new_envs['TRAEFIK_DOMAIN'] = "#{envs['TRAEFIK_DOMAIN_PREFIX']}.#{envs['BASE_DOMAIN']}"
+      new_envs['TRAEFIK_DOMAIN_PORT'] = "#{envs['TRAEFIK_DOMAIN']}:#{envs['TREAFIK_BASE_PORT']}"
+      new_envs['TRAEFIK_DOMAIN_FULL'] = "https://#{envs['TRAEFIK_DOMAIN_PORT']}"
       return new_envs
     end
 

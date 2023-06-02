@@ -37,9 +37,6 @@ occ background:cron
 # LDAP
 # occ config:app:set --value=300 user_ldap cleanUpJobChunkSize
 
-echo "Set LDAP"
-occ app:enable user_ldap
-
 # if [ -z "$LDAP_CONFIG_NAME" ]; then
 #   LDAP_CONFIG_NAME=$(occ ldap:create-empty-config -p)
 #   echo "LDAP Config name is $LDAP_CONFIG_NAME"
@@ -50,18 +47,6 @@ occ app:enable user_ldap
 #     exit 1
 #   fi
 # fi
-
-LDAP_CONFIG_NAME="s01"
-LDAP_CMD="occ ldap:set-config $LDAP_CONFIG_NAME"
-
-# echo "occ ldap:test-config $LDAP_CONFIG_NAME"
-# occ ldap:test-config $LDAP_CONFIG_NAME
-
-occ config:import /etc/config/ldap_setting.json
-$LDAP_CMD ldapAgentPassword "$SAMBA_DC_ADMINISTRATOR_PASSWORD"
-
-echo "occ ldap:test-config s01"
-occ ldap:test-config s01
 
 # password policy
 if [ "$NEXTCLOUD_USER_COMPLEX_PASS" == 'true' ]; then
@@ -99,11 +84,6 @@ occ config:system:set log_rotate_size --value="10485760" --type=integer
 # Mastodon Jira OpenProject Mattermost Jitsi 
 echo "Install apps"
 
-app_name='ldap_write_support'
-occ app:install $app_name
-template=`echo -e "dn: CN={UID},{BASE}\nobjectClass: user\nsAMAccountName: {UID}\nuserPrincipalName: {UID}@$SAMBA_DC_USER_PRINCIPAL_NAME_BASE_DOMAIN\ncn: {UID}\nuserAccountControl: 512"`
-occ config:app:set $app_name 'template.user' --value "$template"
-
 if [ -n "$COLLABORA_DOMAIN_FULL" ]; then
   app_name='richdocuments'
   occ app:install $app_name
@@ -115,6 +95,21 @@ if [ -n "$COLLABORA_DOMAIN_FULL" ]; then
   occ richdocuments:activate-config
 fi
 
+echo "Set LDAP"
+
+occ app:enable user_ldap
+LDAP_CONFIG_NAME="s01"
+LDAP_CMD="occ ldap:set-config $LDAP_CONFIG_NAME"
+occ config:import /etc/config/ldap_setting.json
+$LDAP_CMD ldapAgentPassword "$SAMBA_DC_ADMINISTRATOR_PASSWORD"
+
+echo "occ ldap:test-config s01"
+occ ldap:test-config s01
+
+app_name='ldap_write_support'
+occ app:install $app_name
+template=`echo -e "dn: CN={UID},{BASE}\nobjectClass: user\nsAMAccountName: {UID}\nuserPrincipalName: {UID}@$SAMBA_DC_USER_PRINCIPAL_NAME_BASE_DOMAIN\ncn: {UID}\nuserAccountControl: 512"`
+occ config:app:set $app_name 'template.user' --value "$template"
 
 waiting_admin() {
   while :

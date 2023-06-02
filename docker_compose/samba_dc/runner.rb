@@ -62,7 +62,7 @@ module Anas
       new_envs['SAMBA_DC_BASE_APP_DN'] = "OU=Apps,#{new_envs['SAMBA_DC_BASE_GROUPS_DN']}"
       new_envs['SAMBA_DC_ADMINISTRATOR_DN'] = "CN=#{new_envs['SAMBA_DC_ADMINISTRATOR_NAME']},CN=Users,#{new_envs['SAMBA_DC_BASE_DN']}"
       new_envs['SAMBA_DC_ADMIN_DN'] = "CN=#{new_envs['SAMBA_DC_ADMIN_NAME']},#{new_envs['SAMBA_DC_BASE_USERS_DN']}"
-      new_envs['SAMBA_DC_ADMIN_GROUP_DN'] = "OU=Admins,#{new_envs['SAMBA_DC_BASE_GROUPS_ROLE_DN']}"
+      new_envs['SAMBA_DC_ADMIN_GROUP_DN'] = "CN=Admins,#{new_envs['SAMBA_DC_BASE_GROUPS_ROLE_DN']}"
       new_envs['SAMBA_DC_GROUP_CLASS_NAME'] = "group"
       new_envs['SAMBA_DC_GROUP_CLASS_FILTER'] = "(objectClass=group)"
       new_envs['SAMBA_DC_USER_CLASS_NAME'] = "user"
