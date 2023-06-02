@@ -15,7 +15,7 @@ set_host() { # $1 domain, $2 ip
 }
 
 echo "Set hosts"
-traefik_ip=`ping $TRAEFIK_HOSTNAME -c 1 | sed '1{s/[^(]*(//;s/).*//;q}'`
+traefik_ip=$( ping $TRAEFIK_HOSTNAME -c 1 | sed '1{s/[^(]*(//;s/).*//;q}')
 set_host $NEXTCLOUD_DOMAIN $traefik_ip
 
 liftoff 
