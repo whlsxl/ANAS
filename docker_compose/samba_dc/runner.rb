@@ -43,6 +43,7 @@ module Anas
       new_envs['SAMBA_DC_DC_NAME'] = new_envs['SAMBA_DC_NETBIOS_NAME'].to_s.downcase
       new_envs['SAMBA_DC_DC_DOMAIN'] = "#{new_envs['SAMBA_DC_DC_NAME']}.#{new_envs['SAMBA_DC_DOMAIN']}"
       new_envs['SAMBA_DC_ADMINISTRATOR_NAME'] = 'Administrator'
+      new_envs['SAMBA_DC_ADMIN_DISPLAY_NAME'] = 'Administrator'
       new_envs['SAMBA_DC_ADMIN_PASSWORD'] = envs['DEFAULT_ROOT_PASSWORD'] unless envs.has_key?('SAMBA_DC_ADMIN_PASSWORD')
       new_envs['SAMBA_DC_ADMINISTRATOR_PASSWORD'] = envs['DEFAULT_ROOT_PASSWORD'] unless envs.has_key?('SAMBA_DC_ADMINISTRATOR_PASSWORD')
       new_envs['SAMBA_DC_LDAPS_SERVER_URL'] = "ldaps://#{envs['BASE_DOMAIN']}" unless envs.has_key?('SAMBA_DC_SERVER_FULL_URL')

@@ -100,7 +100,7 @@ if [ ! -z "$SAMBA_DC_ADMIN_NAME" ]; then
   else
     echo "Create $SAMBA_DC_ADMIN_DN"
     echo $(samba-tool user add $SAMBA_DC_ADMIN_NAME $SAMBA_DC_ADMIN_PASSWORD --userou=$SAMBA_DC_BASE_USERS_DN_PREFIX)
-    samba-tool user rename $SAMBA_DC_ADMIN_NAME --display-name=Administrator
+    samba-tool user rename $SAMBA_DC_ADMIN_NAME --display-name=$SAMBA_DC_ADMIN_DISPLAY_NAME
   fi
   echo "Reset $SAMBA_DC_ADMIN_DN password"
   echo $(samba-tool user setpassword $SAMBA_DC_ADMIN_NAME --newpassword=$SAMBA_DC_ADMIN_PASSWORD)
