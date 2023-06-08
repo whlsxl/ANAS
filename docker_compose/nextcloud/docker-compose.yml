@@ -17,6 +17,7 @@ services:
       - "traefik.http.routers.nextcloud.rule=Host(`${NEXTCLOUD_DOMAIN}`)"
       - "traefik.http.routers.nextcloud.middlewares=nextcloud-dav,nextcloud-webfinger,nextcloud-regex,nextcloud-header"
       - "traefik.http.routers.nextcloud.tls=true"
+      - "traefik.http.routers.nextcloud.service=nextcloud"
       - "traefik.http.services.nextcloud.loadbalancer.server.port=8000"
       - "traefik.http.middlewares.nextcloud-dav.replacepathregex.regex=^/.well-known/(card|cal)dav"
       - "traefik.http.middlewares.nextcloud-dav.replacepathregex.replacement=/remote.php/dav/"
@@ -32,11 +33,19 @@ services:
       - "traefik.http.middlewares.nextcloud-header.headers.customFrameOptionsValue=SAMEORIGIN"
       - "traefik.http.middlewares.nextcloud-header.headers.customRequestHeaders.X-Forwarded-Proto=https"
       - "traefik.http.middlewares.nextcloud-header.headers.customResponseHeaders.X-Robots-Tag=noindex,nofollow"
+      - "traefik.http.routers.nextcloud-push.entrypoints=https"
+      - "traefik.http.routers.nextcloud-push.rule=Host(`${NEXTCLOUD_DOMAIN}`) && PathPrefix(`/push`)"
+      - "traefik.http.routers.nextcloud-push.tls=true"
+      - "traefik.http.routers.nextcloud-push.service=nextcloud-push"
+      - "traefik.http.routers.nextcloud-push.middlewares=nextcloud-push_stripprefix"
+      - "traefik.http.middlewares.nextcloud-push_stripprefix.stripprefix.prefixes=/push"
+      - "traefik.http.services.nextcloud-push.loadbalancer.server.port=7867"
       - "traefik.docker.network=traefik"
     env_file:
       - .env
     restart: unless-stopped
     networks:
+      - nextcloud
       - mysql
       - traefik
 
@@ -55,24 +64,7 @@ services:
       - "CRON_PERIOD=*/5 * * * *"
     restart: unless-stopped
     networks:
-      - mysql
-      - traefik
-
-  previewgen:
-    build: ./nextcloud
-    image: ${IMAGE_PREFIX}nextcloud:latest
-    container_name: ${CONTAINER_PREFIX}nextcloud_previewgen
-    depends_on:
       - nextcloud
-    volumes:
-      - "${NEXTCLOUD_PATH}:/data"
-    env_file:
-      - .env
-    environment:
-      - "SIDECAR_PREVIEWGEN=1"
-      - "PREVIEWGEN_PERIOD=0 * * * *"
-    restart: unless-stopped
-    networks:
       - mysql
       - traefik
 
@@ -94,16 +86,58 @@ services:
       - "NC_NEWSUPDATER_LOGLEVEL=error"
     restart: unless-stopped
     networks:
+      - nextcloud
       - mysql
       - traefik
 
+  imaginary:
+    build: ./imaginary
+    image: ${IMAGE_PREFIX}nextcloud_imaginary:latest
+    container_name: ${CONTAINER_PREFIX}nextcloud_imaginary
+    env_file:
+      - .env
+    networks:
+      - nextcloud
+      - traefik
+
+  nextcloud_redis:
+    container_name: ${CONTAINER_PREFIX}nextcloud_redis
+    image: redis:7.2-rc-alpine
+    restart: unless-stopped
+    env_file:
+      - .env
+    networks:
+      - nextcloud
+  
+  talk:
+    build: ./talk
+    image: ${IMAGE_PREFIX}nextcloud_talk:latest
+    container_name: ${CONTAINER_PREFIX}nextcloud_talk
+    env_file:
+      - .env
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.nextcloud-talk-signaling.entrypoints=https"
+      - "traefik.http.routers.nextcloud-talk-signaling.tls=true"
+      - "traefik.http.routers.nextcloud-talk-signaling.rule=Host(`${NEXTCLOUD_DOMAIN}`) && PathPrefix(`/talk`)"
+      - "traefik.http.routers.nextcloud-talk-signaling.service=nextcloud-talk-signaling"
+      - "traefik.http.routers.nextcloud-talk-signaling.middlewares=nextcloud-talk-signaling_stripprefix"
+      - "traefik.http.services.nextcloud-talk-signaling.loadbalancer.server.port=8081"
+      - "traefik.http.middlewares.nextcloud-talk-signaling_stripprefix.stripprefix.prefixes=/talk"
+      - "traefik.docker.network=traefik"
+    ports:
+      - "${NEXTCLOUD_TALK_TURN_PORT}:${NEXTCLOUD_TALK_TURN_PORT}/tcp"
+      - "${NEXTCLOUD_TALK_TURN_PORT}:${NEXTCLOUD_TALK_TURN_PORT}/udp"
+    networks:
+      - traefik
+
 networks:
-  default:
+  nextcloud:
     driver: bridge
     name: nextcloud
-    enable_ipv6: true
-    driver_opts:
-      com.docker.network.enable_ipv6: "true"
+    # enable_ipv6: true
+    # driver_opts:
+    #   com.docker.network.enable_ipv6: "true"
   mysql:
     name: mysql
     external: true

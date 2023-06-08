@@ -10,7 +10,7 @@ module Anas
       @optional_envs = [
         'TREAFIK_BASE_PORT', 'TRAEFIK_DOMAIN_PREFIX'
       ]
-      @default_envs = {'TREAFIK_BASE_PORT' => '9000', 
+      @default_envs = {'TREAFIK_BASE_PORT' => 9000, 
         'TRAEFIK_DOMAIN_PREFIX' => 'traefik'
       }
       @dependent_mods = ['lego']

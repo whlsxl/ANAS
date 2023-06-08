@@ -14,6 +14,23 @@ if [ "$NEXTCLOUD_RM_AUTOGEN_FILES" == "true" ]; then
   mkdir /var/www/core/skeleton/Photos
 fi
 
+user_app_path='/var/www/userapps'
+install_and_enable_app() { # $1 app name
+  if ! [ -d "$user_app_path/$1" ]; then
+      occ app:install $1
+  elif [ "$(occ config:app:get $1 enabled)" != "yes" ]; then
+      occ app:enable $1
+  elif [ "$SKIP_UPDATE" != 1 ]; then
+      occ app:update $1
+  fi
+}
+
+disable_app() { # $1 app name
+  if [ -d "$user_app_path/$1" ]; then
+    occ app:disable $1
+  fi
+}
+
 echo "Setup apps"
 
 # default_phone_region
@@ -65,6 +82,8 @@ occ config:app:set password_policy minLength --value=$NEXTCLOUD_USER_MIN_PASS_LE
 # trusted_proxies
 occ config:system:set trusted_proxies 0 --value=`ping $TRAEFIK_HOSTNAME -c 1 | sed '1{s/[^(]*(//;s/).*//;q}'`
 
+occ config:system:set allow_local_remote_servers --type=bool --value=true
+
 # Set log level
 occ log:manage --level $NEXTCLOUD_LOG_LEVEL
 occ config:system:set log_rotate_size --value="10485760" --type=integer
@@ -84,16 +103,72 @@ occ config:system:set log_rotate_size --value="10485760" --type=integer
 # Mastodon Jira OpenProject Mattermost Jitsi 
 echo "Install apps"
 
+echo "Install collabora office"
 if [ -n "$COLLABORA_DOMAIN_FULL" ]; then
   app_name='richdocuments'
-  occ app:install $app_name
+  install_and_enable_app $app_name
   occ config:app:set $app_name doc_format --value ooxml
   occ config:app:set $app_name public_wopi_url --value $COLLABORA_DOMAIN_FULL
   occ config:app:set $app_name wopi_url --value $COLLABORA_DOMAIN_FULL
-  collabora_ip=`ping $COLLABORA_HOSTNAME -c 1 | sed '1{s/[^(]*(//;s/).*//;q}'`
-  occ config:app:set $app_name wopi_allowlist --value $collabora_ip
+  collabora_ipv4=`ping $COLLABORA_HOSTNAME -c 1 | sed '1{s/[^(]*(//;s/).*//;q}'`
+  # TODO: ipv6
+  occ config:app:set $app_name wopi_allowlist --value $collabora_ipv4
   occ richdocuments:activate-config
+else
+  disable_app 'richdocuments'
 fi
+
+echo "Install talk"
+if [ "$NEXTCLOUD_TALK_ENABLED" == "true" ]; then
+  app_name='spreed'
+  install_and_enable_app $app_name
+  occ config:app:set spreed stun_servers --value "[]"
+  occ talk:stun:add "$NEXTCLOUD_TALK_TURN_DOMAIN_PORT"
+  occ config:app:set spreed turn_servers --value "[]"
+  occ talk:turn:add "turn,turns" "$NEXTCLOUD_TALK_TURN_DOMAIN_PORT" "udp,tcp" --secret="$TALK_TURN_SECRET"
+  occ config:app:set spreed signaling_servers --value "{}"
+  occ talk:signaling:add "$NEXTCLOUD_TALK_SIGNALING_DOMAIN_FULL" "$TALK_SIGNALING_SECRET" --verify
+else
+  disable_app 'spreed'
+fi
+
+# Imaginary
+echo "Install Imaginary & set preview"
+occ config:system:set preview_max_x --value="2048"
+occ config:system:set preview_max_y --value="2048"
+occ config:system:set jpeg_quality --value="60"
+occ config:app:set preview jpeg_quality --value="60"
+occ config:system:delete enabledPreviewProviders
+occ config:system:set enabledPreviewProviders 0 --value="OC\\Preview\\Imaginary"
+occ config:system:set preview_imaginary_url --value="http://$NEXTCLOUD_IMAGINARY_HOSTNAME:9000"
+occ config:system:set enabledPreviewProviders 1 --value="OC\\Preview\\Image"
+occ config:system:set enabledPreviewProviders 2 --value="OC\\Preview\\MarkDown"
+occ config:system:set enabledPreviewProviders 3 --value="OC\\Preview\\MP3"
+occ config:system:set enabledPreviewProviders 4 --value="OC\\Preview\\TXT"
+occ config:system:set enabledPreviewProviders 5 --value="OC\\Preview\\OpenDocument"
+occ config:system:set enabledPreviewProviders 6 --value="OC\\Preview\\Movie"
+occ config:system:set enabledPreviewProviders 7 --value="OC\\Preview\\Krita"
+occ config:system:set enabledPreviewProviders 8 --value="OC\\Preview\\Epub"
+occ config:system:set enabledPreviewProviders 9 --value="OC\\Preview\\MKV"
+occ config:system:set enabledPreviewProviders 10 --value="OC\\Preview\\MP4"
+occ config:system:set enabledPreviewProviders 11 --value="OC\\Preview\\AVI"
+occ config:system:set enable_previews --value=true --type=boolean
+
+echo "Install Preview Generator"
+install_and_enable_app "previewgenerator"
+
+echo "Setup redis"
+occ config:system:set 'filelocking.enabled' --type=bool --value=true
+occ config:system:set 'memcache.locking' --value="\\OC\\Memcache\\Redis"
+occ config:system:set redis host --value="$NEXTCLOUD_REDIS_HOSTNAME"
+occ config:system:set redis port --value="$NEXTCLOUD_REDIS_PORT"
+
+echo "Install notify_push"
+app_name='notify_push'
+install_and_enable_app $app_name
+occ config:system:set trusted_proxies 1 --value="127.0.0.1"
+occ config:system:set trusted_proxies 2 --value="::1"
+occ config:app:set notify_push base_endpoint --value="$NEXTCLOUD_DOMAIN_FULL/push"
 
 echo "Set LDAP"
 
@@ -107,10 +182,11 @@ echo "occ ldap:test-config s01"
 occ ldap:test-config s01
 
 app_name='ldap_write_support'
-occ app:install $app_name
+install_and_enable_app $app_name
 template=`echo -e "dn: CN={UID},{BASE}\nobjectClass: user\nsAMAccountName: {UID}\nuserPrincipalName: {UID}@$SAMBA_DC_USER_PRINCIPAL_NAME_BASE_DOMAIN\ncn: {UID}\nuserAccountControl: 512"`
 occ config:app:set $app_name 'template.user' --value "$template"
 
+# add ldap user admin to admin group
 waiting_admin() {
   while :
   do

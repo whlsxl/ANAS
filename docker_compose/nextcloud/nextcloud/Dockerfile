@@ -1,4 +1,4 @@
-FROM crazymax/nextcloud:26.0.1
+FROM crazymax/nextcloud:edge
 LABEL maintainer="Hailong"
 
 COPY root/ /
