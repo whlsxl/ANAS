@@ -22,6 +22,10 @@ echo "Set hosts"
 traefik_ip=$( ping $TRAEFIK_HOSTNAME -c 1 | sed '1{s/[^(]*(//;s/).*//;q}' )
 set_host $COLLABORA_DOMAIN $traefik_ip
 set_host $NEXTCLOUD_DOMAIN $traefik_ip
+
+# sed -i 's/^pm.max_spare_servers =.*/pm.max_spare_servers = 3/' /etc/php/php-fpm.d/www.conf; \
+# php speed up
+sed -i 's/^pm.max_children =.*/pm.max_children = 100/' /etc/php/php-fpm.d/www.conf; 
 # set_host $TALK_SIGNALING_DOMAIN $traefik_ip
 # talk_turn_ip=$( ping $TALK_HOSTNAME -c 1 | sed '1{s/[^(]*(//;s/).*//;q}' )
 # set_host $TALK_TURN_DOMAIN $talk_turn_ip

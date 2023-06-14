@@ -13,10 +13,6 @@ module Anas
     # @return [Hash<String, String>] the default value of env
     def self.default_envs; @default_envs end
 
-    # @return [Array<String>] the dependency of the module, 
-    #   dependency must run first
-    def self.dependent_mods; @dependent_mods end
-
     # @return [String] the module name of child class
     attr_reader :mod_name
 
@@ -63,7 +59,6 @@ module Anas
       @required_envs = []
       @default_envs = {}
       @optional_envs = []
-      @dependent_mods = []
     end
 
     def reset_temp_path
@@ -81,6 +76,22 @@ module Anas
       return class_name.underscore
     end
 
+    def envs=(new_envs)
+      @envs = append_module_env(new_envs)
+    end
+
+    def services_list
+      result = %x(#{@docker_compose_cmd} config --services)
+      return result.split("\n")
+    end
+    
+    # return the services list base on @envs
+    # 
+    # @return String the list of services
+    def services_list_string
+      return services_list.join(' ')
+    end
+
     # Get the docker-compose.yml file path
     # 
     # @return [String] the module path
@@ -94,7 +105,7 @@ module Anas
       Log.debug("Copy `#{@mod_name}` docker_compose dir from #{get_docker_compose_path} to #{@working_path}")
       FileUtils.cp_r("#{get_docker_compose_path}/.", @working_path)
       Log.info("Rendering `#{@mod_name}` erbs")
-      envs_hash = {envs: append_module_env(envs)}
+      envs_hash = {envs: envs}
       Dir.glob("#{@working_path}/**/*.erb").each do |erb_file|
         return if File.directory?(erb_file)
         Log.info("Rendering #{erb_file}")
@@ -127,7 +138,6 @@ module Anas
     end
 
     # After calculate default_envs & config_envs,
-    # Sometimes runner will change [dependent_mods]
     # this is the last chance to change the envs
     # 
     # @param envs [Hash<String, String>] list of calculated envs
@@ -140,6 +150,14 @@ module Anas
       return envs
     end
 
+    # dependency must run before current
+    # Attention: only config envs & current mods's default envs will be use, 
+    # @param base_envs [Hash<String, String>] config_envs & mod's default_envs
+    # @return [Array<String>] list of run before current
+    def self.dependent_mods(base_envs)
+      return ['core']
+    end
+
     def append_module_env(envs)
       # Add module related env
       new_envs = module_envs(envs)
@@ -148,6 +166,7 @@ module Anas
     end
 
     def gen_files(envs)
+      # envs = append_module_env(envs)
       gen_envs_file!(envs)
       render_files!(envs)
       @is_gened_files = true
@@ -157,8 +176,7 @@ module Anas
       env_file = File.expand_path(".env", @working_path)
       Log.info("Gen envs file #{env_file}")
       File.open(env_file, 'w') do |file|
-        new_envs = append_module_env(envs)
-        new_envs.each do |key, value|
+        envs.each do |key, value|
           file.write "#{key}='#{value}'\n"
         end
       end
@@ -185,12 +203,21 @@ module Anas
         the_path = @working_path
         Log.debug("Entry @working_path #{the_path}")
         Dir.chdir(the_path)
-        result = system("#{@docker_compose_cmd} build", exception: true)
+        # result = system("#{@docker_compose_cmd} build", exception: true)
+        slist = services_list_string
+        Log.info("Building services #{slist}")
+        ENV.update(@envs)
+        Log.info("Exec `#{@docker_compose_cmd} build #{slist}`")
+        result = %x(#{@docker_compose_cmd} build #{slist})
       rescue => exception
         Log.error("Building #{@mod_name} ERROR #{exception}")
         raise exception
       end
       Log.info("Module has been built #{@mod_name}")
+    end
+
+    def after_start_action
+      Log.info("After start #{@mod_name}...")
     end
 
     def start
@@ -199,7 +226,13 @@ module Anas
         the_path = @working_path
         Log.debug("Entry @working_path #{the_path}")
         Dir.chdir(the_path)
-        result = system("#{@docker_compose_cmd} up -d", exception: true)
+        # result = system("#{@docker_compose_cmd} up -d", exception: true)
+        slist = services_list_string
+        Log.info("Starting services #{slist}")
+        ENV.update(@envs)
+        Log.info("Exec `#{@docker_compose_cmd} up #{slist} -d`")
+        result = %x(#{@docker_compose_cmd} up #{slist} -d)
+        after_start_action
       rescue => exception
         Log.error("Start #{@mod_name} ERROR #{exception}")
         raise exception
@@ -221,6 +254,9 @@ module Anas
       begin
         Log.debug("Entry @working_path #{@working_path}")
         Dir.chdir(@working_path)
+        # result = system("#{@docker_compose_cmd} down")
+        ENV.update(@envs)
+        Log.info("Exec `#{@docker_compose_cmd} down`")
         result = system("#{@docker_compose_cmd} down")
       rescue => exception
         Log.error("Stop #{@mod_name} ERROR #{exception}")
@@ -234,11 +270,17 @@ module Anas
     end
 
     # mod don't have depend relationship, but need run after this mods
+    # 
+    # @param envs [Hash<String, String>] config_envs & mod's default_envs
+    # @return [Array<String>] list of run after current
     def run_after_mods(envs)
       return []
     end
 
     # mod don't have depend relationship, but need run before this mods
+    # 
+    # @param envs [Hash<String, String>] config_envs & mod's default_envs
+    # @return [Array<String>] list of run before current
     def run_before_mods(envs)
       return []
     end

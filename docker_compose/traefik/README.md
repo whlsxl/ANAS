@@ -10,7 +10,7 @@ Traefik
 无
 ### 需要的环境变量
 
-- `TREAFIK_BASE_PORT`: 定义了HTTP服务的对外端口
+- `TRAEFIK_BASE_PORT`: 定义了HTTP服务的对外端口
   - 默认为`9000`
 - `LEGO_EMAIL`: 获取证书时，提交给Let's Encrypt的邮件，用于获取证书相关提醒
   - 如果为空，使用`core`的`Email`代替

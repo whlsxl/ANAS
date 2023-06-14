@@ -15,7 +15,10 @@ module Anas
       @default_envs = {
         'DDNS_DOMAIN_PREFIX' => 'ddns'
       }
-      @dependent_mods = ['core', 'traefik']
+    end
+
+    def self.dependent_mods(base_envs)
+      return ['traefik']
     end
 
     def cal_envs(envs)

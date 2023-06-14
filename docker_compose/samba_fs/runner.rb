@@ -21,7 +21,6 @@ module Anas
       @default_envs = { 'SAMBA_FS_LOG_LEVEL' => 1, 'SAMBA_FS_WSDD_LOG_LEVEL' => 0,
         'SAMBA_FS_HOSTNAME' => 'SambaFS'
       }
-      @dependent_mods = ['core']
     end
 
     def cal_envs(envs)

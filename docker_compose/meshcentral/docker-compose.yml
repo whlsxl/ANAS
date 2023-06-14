@@ -16,12 +16,14 @@ services:
     volumes:
       - "${DATA_PATH}/meshcentral/meshcentral-data:/opt/meshcentral/meshcentral-data"
       - "${DATA_PATH}/meshcentral/meshcentral-files:/opt/meshcentral/meshcentral-files"
+      - "${DATA_PATH}/meshcentral/meshcentral-web:/opt/meshcentral/meshcentral-web"
+      - "${DATA_PATH}/meshcentral/meshcentral-backups:/opt/meshcentral/meshcentral-backups"
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.meshcentral.entrypoints=https"
       - "traefik.http.routers.meshcentral.rule=Host(`${MESHCENTRAL_DOMAIN}`)"
       - "traefik.http.routers.meshcentral.tls=true"
-      - "traefik.http.services.meshcentral.loadbalancer.server.port=${TREAFIK_BASE_PORT}"
+      - "traefik.http.services.meshcentral.loadbalancer.server.port=${TRAEFIK_BASE_PORT}"
     networks:
       - mysql
       - traefik

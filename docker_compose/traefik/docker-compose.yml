@@ -6,7 +6,7 @@ services:
     build: ./traefik
     container_name: ${CONTAINER_PREFIX}${MODULE_NAME}
     command:
-      - --entrypoints.https.address=:${TREAFIK_BASE_PORT}
+      - --entrypoints.https.address=:${TRAEFIK_BASE_PORT}
       - --providers.docker=true
       - --providers.docker.exposedbydefault=false
       - --providers.docker.network=traefik
@@ -16,7 +16,7 @@ services:
     environment:
       - LEGO_CERT_PATH
     ports:
-      - "${TREAFIK_BASE_PORT}:${TREAFIK_BASE_PORT}"
+      - "${TRAEFIK_BASE_PORT}:${TRAEFIK_BASE_PORT}"
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
       - "${LEGO_CERTS_PATH}:/certs:ro"

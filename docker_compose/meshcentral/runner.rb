@@ -14,7 +14,6 @@ module Anas
       @default_envs = {
         'MESHCENTRAL_DOMAIN_PREFIX' => 'meshcentral', 'MESHCENTRAL_MPS_PORT' => '4433'
       }
-      @dependent_mods = ['traefik', 'mysql']
     end
 
     def cal_envs(envs)
@@ -36,6 +35,10 @@ module Anas
       end
 
       return new_envs
+    end
+
+    def self.dependent_mods(base_envs)
+      return ['traefik', 'mysql']
     end
 
     def use_ldap?

@@ -11,29 +11,30 @@ COPY --chmod=775 healthcheck.sh /usr/bin/healthcheck.sh
 COPY --chmod=664 supervisord.conf /supervisord.conf
 
 RUN set -ex; \
-  apk add --no-cache \
-  ca-certificates \
-  tzdata \
-  bash \
-  openssl \
-  supervisor \
-  bind-tools \
-  netcat-openbsd \
-  shadow \
-  util-linux \
-  build-base \
-  lua5.3-dev \
-  luarocks5.3; \
-  apk add --no-cache janus-gateway --repository http://dl-cdn.alpinelinux.org/alpine/edge/community; \
-  luarocks-5.3 install luajson; \
-  luarocks-5.3 install ansicolors; \
-  rename -v ".jcfg.sample" ".jcfg" /etc/janus/*.sample; \
-  apk del --no-cache \
-  shadow \
-  util-linux \
-  build-base \
-  lua5.3-dev \
-  luarocks5.3; \
+    apk add --no-cache \
+        ca-certificates \
+        tzdata \
+        bash \
+        openssl \
+        supervisor \
+        bind-tools \
+        netcat-openbsd \
+        shadow \
+        util-linux \
+        build-base \
+        lua5.3-dev \
+        luarocks5.3; \
+    apk add --no-cache janus-gateway --repository http://dl-cdn.alpinelinux.org/alpine/edge/community; \
+    useradd --system talk; \
+    luarocks-5.3 install luajson; \
+    luarocks-5.3 install ansicolors; \
+    rename -v ".jcfg.sample" ".jcfg" /etc/janus/*.sample; \
+    apk del --no-cache \
+        shadow \
+        util-linux \
+        build-base \
+        lua5.3-dev \
+        luarocks5.3; \
   \
   # Give root a random password
     echo "root:$(openssl rand -base64 12)" | chpasswd; \

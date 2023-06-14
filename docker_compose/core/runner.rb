@@ -41,9 +41,12 @@ module Anas
       }
       currentDNS = Resolv::DNS::Config.default_config_hash[:nameserver]
       @default_envs['HOST_DNS_SERVER'] = currentDNS.join(' ')
-      @dependent_mods = []
     end
     
+    def self.dependent_mods(base_envs)
+      return []
+    end
+
     def base_path=(new_base_path)
       super
       perpare_files

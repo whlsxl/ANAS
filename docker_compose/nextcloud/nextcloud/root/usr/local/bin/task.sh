@@ -8,7 +8,7 @@ if [ "$SIDECAR_CRON" = "1" ] || [ "$SIDECAR_PREVIEWGEN" = "1" ] || [ "$SIDECAR_N
   exit 0
 fi
 
-if [ "$NEXTCLOUD_RM_AUTOGEN_FILES" == "true" ]; then 
+if [ "$NEXTCLOUD_RM_SKELETON_FILES" == "true" ]; then 
   rm -rf /var/www/core/skeleton/*
   mkdir /var/www/core/skeleton/Documents
   mkdir /var/www/core/skeleton/Photos
@@ -42,10 +42,10 @@ occ config:system:set default_phone_region --value=$NEXTCLOUD_PHONE_REGION
 # occ config:system:set default_language --value=$DEFAULT_LANGUAGE
 
 # config domain
-echo "Set https https://$NEXTCLOUD_DOMAIN:$TREAFIK_BASE_PORT"
+echo "Set https https://$NEXTCLOUD_DOMAIN:$TRAEFIK_BASE_PORT"
 occ config:system:set overwriteprotocol --value=https
-occ config:system:set trusted_domains 0 --value=$NEXTCLOUD_DOMAIN:$TREAFIK_BASE_PORT
-occ config:system:set overwrite.cli.url --value=https://$NEXTCLOUD_DOMAIN:$TREAFIK_BASE_PORT
+occ config:system:set trusted_domains 0 --value=$NEXTCLOUD_DOMAIN:$TRAEFIK_BASE_PORT
+occ config:system:set overwrite.cli.url --value=https://$NEXTCLOUD_DOMAIN:$TRAEFIK_BASE_PORT
 
 # cron
 echo "Set occ background:cron"
@@ -125,7 +125,7 @@ if [ "$NEXTCLOUD_TALK_ENABLED" == "true" ]; then
   occ config:app:set spreed stun_servers --value "[]"
   occ talk:stun:add "$NEXTCLOUD_TALK_TURN_DOMAIN_PORT"
   occ config:app:set spreed turn_servers --value "[]"
-  occ talk:turn:add "turn,turns" "$NEXTCLOUD_TALK_TURN_DOMAIN_PORT" "udp,tcp" --secret="$TALK_TURN_SECRET"
+  occ talk:turn:add "turn" "$NEXTCLOUD_TALK_TURN_DOMAIN_PORT" "udp,tcp" --secret="$TALK_TURN_SECRET"
   occ config:app:set spreed signaling_servers --value "{}"
   occ talk:signaling:add "$NEXTCLOUD_TALK_SIGNALING_DOMAIN_FULL" "$TALK_SIGNALING_SECRET" --verify
 else
@@ -204,5 +204,14 @@ waiting_admin() {
 }
 
 waiting_admin
+
+echo "Install memories"
+if [ "$NEXTCLOUD_MEMORIES_ENABLED" == "true" ]; then
+  app_name='memories'
+  install_and_enable_app $app_name
+  occ config:system:set preview_max_memory --value=4096
+  occ config:system:set preview_max_filesize_image --value=256
+  occ memories:places-setup
+fi
 
 echo "Nextcloud tasks execute completed"

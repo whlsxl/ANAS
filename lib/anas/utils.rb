@@ -109,16 +109,16 @@ module Anas
       end
     end
     
-    def initialize(mod_names, envs)
+    def initialize(mod_names, config_envs)
       @mod_names = mod_names
       @all_dependent_nodes = {}
       @runner_classes = {}
       @working_path = nil
-      build_dependent(mod_names, envs)
+      build_dependent(mod_names, config_envs)
     end
 
-    def build_dependent(mod_names, static_envs)
-      @static_envs = static_envs
+    def build_dependent(mod_names, config_envs)
+      @config_envs = config_envs
       def build_node_dependent(mod_name) 
         # get tree node cache
         dependent_node = @all_dependent_nodes[mod_name]
@@ -128,8 +128,8 @@ module Anas
         # create tree node
         mod_node = ModNode.new(mod_runner)
         @all_dependent_nodes[mod_name] = mod_node
-
-        mod_runner.class.dependent_mods.each do |dep_mod_name|
+        new_envs = mod_runner.class.default_envs.merge(@config_envs)
+        mod_runner.class.dependent_mods(new_envs).each do |dep_mod_name|
           # build dependent tree node
           dependent_mod_node = build_node_dependent(dep_mod_name)
           # add dependent vector
@@ -146,7 +146,8 @@ module Anas
       def deal_run_after_mods(mod_name)
         c_node = @all_dependent_nodes[mod_name]
         runner = c_node.runner
-        run_after_mod_name = runner.run_after_mods(@static_envs)
+        new_envs = runner.class.default_envs.merge(@config_envs)
+        run_after_mod_name = runner.run_after_mods(new_envs)
         run_after_mod_name.each do |after_mod_name|
           after_node = @all_dependent_nodes[after_mod_name]
           # Add dependent relationship only when after_node exist
@@ -165,7 +166,8 @@ module Anas
       def deal_run_before_mods(mod_name)
         c_node = @all_dependent_nodes[mod_name]
         runner = c_node.runner
-        run_before_mod_name = runner.run_before_mods(@static_envs)
+        new_envs = runner.class.default_envs.merge(@config_envs)
+        run_before_mod_name = runner.run_before_mods(new_envs)
         run_before_mod_name.each do |before_mod_name|
           before_node = @all_dependent_nodes[before_mod_name]
           # Add dependent relationship only when before_node exist
@@ -406,8 +408,8 @@ module Anas
       return dependent_tree.process_mods(mods) do |mod_name, node|
         runner = node.runner
         envs_clone = envs.clone
-        runner.envs = envs_clone
-        runner.gen_files(envs_clone)
+        runner.envs = envs_clone.value_to_string!
+        runner.gen_files(runner.envs)
       end
     end
 
@@ -438,35 +440,17 @@ module Anas
       end
     end
 
-    def get_default_envs(mods)
-      @checked_default_envs = []
-      def get_default_env(mod)
-        return {} if @checked_default_envs.include?(mod)
-        default_envs = {}
-        this_class = mod.mod_class!
-        this_class.dependent_mods.each do |dmod|
-          default_envs.update(get_default_env(dmod))
-        end
-        default_envs.update(this_class.default_envs)
-        @checked_default_envs.append(mod)
-        return default_envs
-      end
-      default_envs = {}
-      mods.each do |mod|
-        default_envs.update(get_default_env(mod))
-      end
-
-      Log.debug("Get mods default envs #{default_envs}")
-      return default_envs.value_to_string!
-    end
-
     # The module default envs + config_envs
     # 
     # @param mods [Array<String>] list of mods
     # @param config_envs [Hash<String, String>] config file content
     # @return [Hash<String, String>] default envs
     def get_static_envs(mods, config_envs)
-      static_envs = get_default_envs(mods).update(config_envs)
+      dependent_tree = @dependent_tree
+      default_envs = dependent_tree.process_mods(mods, {}) do |mod_name, node, envs|
+        envs.merge node.runner.class.default_envs
+      end
+      static_envs = default_envs.update(config_envs)
       static_envs["ALL_MODS_NAME"] = mods.join(',')
       return static_envs.value_to_string! # env value must string
     end
@@ -699,11 +683,12 @@ module Anas
       Log.info("Config mods #{mods}")
       config_envs = config['envs']
       Log.info("Config envs #{config_envs}")
-      static_envs = get_static_envs(mods, config_envs)
 
       Log.debug("Build DependentTree")
-      dependent_tree = DependentTree.new(mods, static_envs)
+      dependent_tree = DependentTree.new(mods, config_envs)
       @dependent_tree = dependent_tree
+
+      static_envs = get_static_envs(mods, config_envs)
       dependent_tree.set_working_path(working_path)
 
       envs = process_envs(mods, static_envs)

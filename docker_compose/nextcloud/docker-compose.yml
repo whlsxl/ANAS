@@ -6,9 +6,9 @@ services:
     image: ${IMAGE_PREFIX}nextcloud:latest
     container_name: ${CONTAINER_PREFIX}nextcloud
     volumes:
-      - "${NEXTCLOUD_PATH}:/data"
-      - type: tmpfs
-        target: /tmp
+      - "${NEXTCLOUD_BASE_PATH}/nextcloud:/data"
+      # - type: tmpfs
+      #   target: /tmp
     dns:
       - ${LOCAL_DNS_SERVER}
     labels:
@@ -46,7 +46,7 @@ services:
     restart: unless-stopped
     networks:
       - nextcloud
-      - mysql
+      - db
       - traefik
 
   cron:
@@ -56,7 +56,7 @@ services:
     depends_on:
       - nextcloud
     volumes:
-      - "${NEXTCLOUD_PATH}:/data"
+      - "${NEXTCLOUD_BASE_PATH}/nextcloud:/data"
     env_file:
       - .env
     environment:
@@ -65,7 +65,7 @@ services:
     restart: unless-stopped
     networks:
       - nextcloud
-      - mysql
+      - db
       - traefik
 
   news_updater:
@@ -75,7 +75,7 @@ services:
     depends_on:
       - nextcloud
     volumes:
-      - "${NEXTCLOUD_PATH}:/data"
+      - "${NEXTCLOUD_BASE_PATH}/nextcloud:/data"
     env_file:
       - .env
     environment:
@@ -87,7 +87,7 @@ services:
     restart: unless-stopped
     networks:
       - nextcloud
-      - mysql
+      - db
       - traefik
 
   imaginary:
@@ -104,6 +104,8 @@ services:
     container_name: ${CONTAINER_PREFIX}nextcloud_redis
     image: redis:7.2-rc-alpine
     restart: unless-stopped
+    volumes:
+      - "${NEXTCLOUD_BASE_PATH}/redis:/data"
     env_file:
       - .env
     networks:
@@ -115,6 +117,9 @@ services:
     container_name: ${CONTAINER_PREFIX}nextcloud_talk
     env_file:
       - .env
+    volumes:
+      - type: tmpfs
+        target: /var/lib/coturn
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.nextcloud-talk-signaling.entrypoints=https"
@@ -138,8 +143,8 @@ networks:
     # enable_ipv6: true
     # driver_opts:
     #   com.docker.network.enable_ipv6: "true"
-  mysql:
-    name: mysql
+  db:
+    name: ${NEXTCLOUD_NETWORK_DB}
     external: true
   traefik:
     name: traefik

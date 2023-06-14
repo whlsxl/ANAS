@@ -14,7 +14,10 @@ module Anas
       @default_envs = {
         'LAM_DOMAIN_PREFIX' => 'lam'
       }
-      @dependent_mods = ['core', 'traefik']
+    end
+
+    def self.dependent_mods(base_envs)
+      return ['traefik']
     end
 
     def cal_envs(envs)

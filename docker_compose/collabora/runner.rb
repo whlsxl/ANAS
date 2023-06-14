@@ -17,15 +17,18 @@ module Anas
         'COLLABORA_INTERFACE' => 'default', 'COLLABORA_HOSTNAME' => 'collabora',
         'COLLABORA_AUTO_SAVE' => '60',
       }
-      @dependent_mods = ['traefik']
     end
 
     def cal_envs(envs)
       new_envs = envs
       new_envs['COLLABORA_DOMAIN'] = "#{envs['COLLABORA_DOMAIN_PREFIX']}.#{envs['BASE_DOMAIN']}"
-      new_envs['COLLABORA_DOMAIN_PORT'] = "#{new_envs['COLLABORA_DOMAIN']}:#{new_envs['TREAFIK_BASE_PORT']}"
+      new_envs['COLLABORA_DOMAIN_PORT'] = "#{new_envs['COLLABORA_DOMAIN']}:#{new_envs['TRAEFIK_BASE_PORT']}"
       new_envs['COLLABORA_DOMAIN_FULL'] = "https://#{new_envs['COLLABORA_DOMAIN_PORT']}"
       return new_envs
+    end
+
+    def self.dependent_mods(base_envs)
+      return ['traefik']
     end
 
     def module_envs(envs)
@@ -45,7 +48,7 @@ module Anas
       new_envs['HOSTNAME'] = envs['COLLABORA_DOMAIN_PORT']
       new_envs['FRAME_ANCESTORS'] = 'https://*'
       new_envs['ENABLE_CLEANUP'] = 'true'
-      # new_envs['EXTRA_OPTIONS'] = "--port #{envs['TREAFIK_BASE_PORT']}"
+      # new_envs['EXTRA_OPTIONS'] = "--port #{envs['TRAEFIK_BASE_PORT']}"
       return new_envs
     end
 

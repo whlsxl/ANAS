@@ -22,7 +22,6 @@ module Anas
         'SAMBA_DC_USER_COMPLEX_PASS' => true, 'SAMBA_DC_USER_MAX_PASS_AGE' => 70, 
         'SAMBA_DC_USER_MIN_PASS_LENGTH' => 7, 'SAMBA_DC_LOG_LEVEL' => 1,
       }
-      @dependent_mods = ['lego', 'bind']
     end
 
     def cal_envs(envs)
@@ -101,5 +100,10 @@ module Anas
       end
       super
     end
+    
+    def self.dependent_mods(base_envs)
+      return ['lego', 'bind']
+    end
+
   end
 end

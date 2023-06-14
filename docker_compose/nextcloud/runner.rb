@@ -8,31 +8,33 @@ module Anas
     def self.init
       super
       # TODO: sso
-      @required_envs = ['MYSQL_ROOT_PASSWORD', 'NEXTCLOUD_ADMIN_PASSWORD'] # TODO
+      @required_envs = [] # TODO
       @optional_envs = [
+        'NEXTCLOUD_ADMIN_PASSWORD',
         'NEXTCLOUD_DOMAIN_PREFIX', 'NEXTCLOUD_DB_NAME', 'NEXTCLOUD_PHONE_REGION',
         'NEXTCLOUD_ADMIN_USERNAME', 'NEXTCLOUD_USER_FILTER',
-        'NEXTCLOUD_DEFAULT_QUOTA', 'NEXTCLOUD_PATH', 'NEXTCLOUD_USER_MIN_PASS_LENGTH',
-        'NEXTCLOUD_USER_COMPLEX_PASS', 'NEXTCLOUD_USER_MAX_PASS_AGE', 'NEXTCLOUD_RM_AUTOGEN_FILES',
+        'NEXTCLOUD_DEFAULT_QUOTA', 'NEXTCLOUD_BASE_PATH', 'NEXTCLOUD_USER_MIN_PASS_LENGTH',
+        'NEXTCLOUD_USER_COMPLEX_PASS', 'NEXTCLOUD_USER_MAX_PASS_AGE', 'NEXTCLOUD_RM_SKELETON_FILES',
         'NEXTCLOUD_LOG_LEVEL', 'NEXTCLOUD_MEMORY_LIMIT', 'NEXTCLOUD_UPLOAD_MAX_SIZE',
-        'NEXTCLOUD_DEBUG', 'NEXTCLOUD_TALK_TURN_PORT', 'NEXTCLOUD_TALK_ENABLED'
+        'NEXTCLOUD_DEBUG', 'NEXTCLOUD_TALK_TURN_PORT', 'NEXTCLOUD_TALK_ENABLED',
+        'NEXTCLOUD_MEMORIES_ENABLED',
       ]
       @default_envs = {
         'NEXTCLOUD_DOMAIN_PREFIX' => 'nc', 'NEXTCLOUD_DB_NAME' => 'nextcloud',
-        'NEXTCLOUD_PHONE_REGION' => 'CN', 'NEXTCLOUD_RM_AUTOGEN_FILES' => true,
+        'NEXTCLOUD_PHONE_REGION' => 'CN', 'NEXTCLOUD_RM_SKELETON_FILES' => false,
         'NEXTCLOUD_LOG_LEVEL' => '2', 'NEXTCLOUD_MEMORY_LIMIT' => '1G',
         'NEXTCLOUD_UPLOAD_MAX_SIZE' => '16G', 'NEXTCLOUD_DEBUG' => false,
         'NEXTCLOUD_TALK_TURN_PORT' => 3478, 'NEXTCLOUD_TALK_ENABLED' => true,
+        'NEXTCLOUD_MEMORIES_ENABLED' => true,
       }
-      @dependent_mods = ['mysql', 'traefik']
     end
 
     def cal_envs(envs)
       new_envs = envs
       new_envs['NEXTCLOUD_HOSTNAME'] = 'nextcloud'
-      new_envs['NEXTCLOUD_PATH'] = "#{envs['DATA_PATH']}/nextcloud" unless envs.has_key?('NEXTCLOUD_PATH')
+      new_envs['NEXTCLOUD_BASE_PATH'] = "#{envs['DATA_PATH']}/nextcloud" unless envs.has_key?('NEXTCLOUD_BASE_PATH')
       new_envs['NEXTCLOUD_DOMAIN'] = "#{envs['NEXTCLOUD_DOMAIN_PREFIX']}.#{envs['BASE_DOMAIN']}"
-      new_envs['NEXTCLOUD_DOMAIN_PORT'] = "#{envs['NEXTCLOUD_DOMAIN']}:#{envs['TREAFIK_BASE_PORT']}"
+      new_envs['NEXTCLOUD_DOMAIN_PORT'] = "#{envs['NEXTCLOUD_DOMAIN']}:#{envs['TRAEFIK_BASE_PORT']}"
       new_envs['NEXTCLOUD_DOMAIN_FULL'] = "https://#{envs['NEXTCLOUD_DOMAIN_PORT']}"
       
       new_envs['NEXTCLOUD_TALK_TURN_DOMAIN_PORT'] = "#{envs['NEXTCLOUD_DOMAIN']}:#{envs['NEXTCLOUD_TALK_TURN_PORT']}"
@@ -40,6 +42,21 @@ module Anas
 
       new_envs['NEXTCLOUD_REDIS_HOSTNAME'] = 'nextcloud_redis'
       new_envs['NEXTCLOUD_REDIS_PORT'] = 6379
+      unless envs.has_key?('NEXTCLOUD_DB_TYPE')
+        if envs.has_key?('POSTGRES_HOST')
+          new_envs['NEXTCLOUD_DB_TYPE'] = 'pgsql'
+        elsif envs.has_key?('MYSQL_HOST')
+          new_envs['NEXTCLOUD_DB_TYPE'] = 'mysql'
+        else
+          raise EnvError.new("No database for nextcloud.")
+        end
+      end
+
+      if new_envs['NEXTCLOUD_DB_TYPE'] == 'mysql'
+        new_envs['NEXTCLOUD_NETWORK_DB'] = 'mysql'
+      elsif new_envs['NEXTCLOUD_DB_TYPE'] == 'pgsql'
+        new_envs['NEXTCLOUD_NETWORK_DB'] = 'postgres'
+      end
 
       new_envs['NEXTCLOUD_IMAGINARY_HOSTNAME'] = 'imaginary'
       # avoid conflit with samba admin user
@@ -106,11 +123,18 @@ module Anas
       new_envs['HSTS_HEADER'] = 'max-age=15768000; includeSubDomains'
       new_envs['RP_HEADER'] = 'strict-origin'
       new_envs['SUBDIR'] = ''
-      new_envs['DB_TYPE'] = 'mysql'
-      new_envs['DB_HOST'] = envs['MYSQL_HOST']
+
+      new_envs['DB_TYPE'] = envs['NEXTCLOUD_DB_TYPE']
+      if envs['NEXTCLOUD_DB_TYPE'] == 'pgsql'
+        new_envs['DB_HOST'] = envs['POSTGRES_HOST_PORT']
+        new_envs['DB_USER'] = envs['POSTGRES_USERNAME']
+        new_envs['DB_PASSWORD'] = envs['POSTGRES_PASSWORD']
+      elsif envs['NEXTCLOUD_DB_TYPE'] == 'mysql'
+        new_envs['DB_HOST'] = envs['MYSQL_HOST_PORT']
+        new_envs['DB_USER'] = envs['MYSQL_USERNAME']
+        new_envs['DB_PASSWORD'] = envs['MYSQL_PASSWORD']
+      end
       new_envs['DB_NAME'] = envs['NEXTCLOUD_DB_NAME']
-      new_envs['DB_USER'] = envs['MYSQL_USERNAME']
-      new_envs['DB_PASSWORD'] = envs['MYSQL_PASSWORD']
 
       new_envs['TALK_TURN_SECRET'] = String.random_password(32)
       new_envs['TALK_SIGNALING_SECRET'] = String.random_password(32)
@@ -118,8 +142,21 @@ module Anas
       return new_envs
     end
 
+    def self.dependent_mods(base_envs)
+      return ['traefik']
+    end
+
     def run_after_mods(envs)
-      return ['samba_dc']
+      return ['samba_dc', 'postgres', 'mysql']
+    end
+
+    def services_list
+      list = super
+      if @envs['NEXTCLOUD_TALK_ENABLED'] == 'true'
+        return list
+      else
+        return list.minus 'talk'
+      end
     end
 
   end

@@ -12,7 +12,6 @@ module Anas
       @default_envs = {
         'PHPLDAPADMIN_DOMAIN_PREFIX' => 'phpldapadmin'
       }
-      @dependent_mods = ['traefik']
     end
 
     def cal_envs(envs)
@@ -24,5 +23,10 @@ module Anas
     def run_after_mods(envs)
       return ['samba_dc']
     end
+
+    def self.dependent_mods(base_envs)
+      return ['traefik']
+    end
+
   end
 end

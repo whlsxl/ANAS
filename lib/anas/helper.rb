@@ -35,6 +35,18 @@ class ::Hash
   end
 end
 
+class Array
+  def plus(element)
+    self.push(element) unless self.include?(element)
+    return self
+  end
+
+  def minus(element)
+    self.delete(element)
+    return self
+  end
+end
+
 CHARS = ('0'..'9').to_a + ('A'..'Z').to_a + ('a'..'z').to_a
 class String
   def camelize

@@ -16,7 +16,7 @@ listening-port=$NEXTCLOUD_TALK_TURN_PORT
 fingerprint
 use-auth-secret
 static-auth-secret=$TALK_TURN_SECRET
-realm=$TALK_TURN_DOMAIN
+realm=$NEXTCLOUD_DOMAIN
 total-quota=0
 bps-capacity=0
 stale-nonce

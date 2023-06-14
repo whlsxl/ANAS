@@ -10,7 +10,6 @@ module Anas
       @required_envs = ['DNS_PROVIDER']
       @optional_envs = ['LEGO_EMAIL', 'LEGO_DNS_SERVER', 'LEGO_DATA_PATH']
       @default_envs = {'LEGO_DNS_SERVER' => '223.5.5.5'}
-      @dependent_mods = ['core']
     end
 
     def cal_envs(envs)
