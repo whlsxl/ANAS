@@ -3,6 +3,7 @@ require 'sshkey'
 require 'resolv'
 require 'ipaddr'
 require 'json'
+require 'total'
 
 module Anas
   class CoreRunner < BaseRunner

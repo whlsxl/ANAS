@@ -11,7 +11,6 @@ module Anas
       @required_envs = []
       @optional_envs = ['BIND_DEBUG', 'BIND_DNS_FORWARDER']
       @default_envs = {'BIND_DEBUG' => 'true'}
-      @dependent_mods = ['core']
     end
     def cal_envs(envs)
       new_envs = envs

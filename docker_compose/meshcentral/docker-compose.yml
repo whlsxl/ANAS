@@ -25,14 +25,14 @@ services:
       - "traefik.http.routers.meshcentral.tls=true"
       - "traefik.http.services.meshcentral.loadbalancer.server.port=${TRAEFIK_BASE_PORT}"
     networks:
-      - mysql
+      - mariadb
       - traefik
 networks:
   default:
     driver: bridge
     name: meshcentral
-  mysql:
-    name: mysql
+  mariadb:
+    name: mariadb
     external: true
   traefik:
     name: traefik

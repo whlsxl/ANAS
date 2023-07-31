@@ -1,0 +1,29 @@
+version: "3.5"
+
+services:
+  llng:
+    container_name: ${CONTAINER_PREFIX}llng
+    image: ${IMAGE_PREFIX}llng:latest
+    build: ./llng
+    restart: unless-stopped
+    volumes:
+      - "${DATA_PATH}/llng/conf:/var/lib/lemonldap-ng/conf/"
+    env_file:
+      - .env
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.llng.entrypoints=https"
+      - "traefik.http.routers.llng.rule=Host(`${LLNG_DOMAIN}`) || Host(`${LLNG_MANAGER_DOMAIN}`) || Host(`${LLNG_TEST_DOMAIN}`)"
+      - "traefik.http.routers.llng.tls=true"
+      - "traefik.http.services.llng.loadbalancer.server.port=80"
+    networks:
+      - traefik
+      - mariadb
+
+networks:
+  mariadb:
+    name: mariadb
+    external: true
+  traefik:
+    name: traefik
+    external: true

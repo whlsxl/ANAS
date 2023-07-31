@@ -64,6 +64,8 @@ if [ $SAMBA_DC_APP_FILTER == "true" ]; then
   do
     create_group "APP_$name" $APP_BASE "APP_$name"
   done
+  # User can access all app if add to this group
+  create_group "APP_all" $APP_BASE "APP_all"
 fi
 
 # auto create ldap structure

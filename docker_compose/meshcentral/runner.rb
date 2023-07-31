@@ -38,7 +38,7 @@ module Anas
     end
 
     def self.dependent_mods(base_envs)
-      return ['traefik', 'mysql']
+      return ['traefik', 'mariadb']
     end
 
     def use_ldap?

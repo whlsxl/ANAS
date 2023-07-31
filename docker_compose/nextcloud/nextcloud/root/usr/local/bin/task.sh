@@ -44,8 +44,9 @@ occ config:system:set default_phone_region --value=$NEXTCLOUD_PHONE_REGION
 # config domain
 echo "Set https https://$NEXTCLOUD_DOMAIN:$TRAEFIK_BASE_PORT"
 occ config:system:set overwriteprotocol --value=https
-occ config:system:set trusted_domains 0 --value=$NEXTCLOUD_DOMAIN:$TRAEFIK_BASE_PORT
-occ config:system:set overwrite.cli.url --value=https://$NEXTCLOUD_DOMAIN:$TRAEFIK_BASE_PORT
+occ config:system:set trusted_domains 0 --value=$NEXTCLOUD_DOMAIN_PORT
+occ config:system:set overwrite.cli.url --value=$NEXTCLOUD_DOMAIN_FULL
+occ config:system:set overwritehost --value=$NEXTCLOUD_DOMAIN_PORT
 
 # cron
 echo "Set occ background:cron"
@@ -213,5 +214,35 @@ if [ "$NEXTCLOUD_MEMORIES_ENABLED" == "true" ]; then
   occ config:system:set preview_max_filesize_image --value=256
   occ memories:places-setup
 fi
+
+echo "Install SAML authentication"
+app_name='user_saml'
+install_and_enable_app $app_name
+occ saml:config:set 1 \
+    --general-idp0_display_name="SSO Login" \
+    --general-uid_mapping="sAMAccountName" \
+    --idp-entityId="$LLNG_SAML_IDP_ENTITY_ID" \
+    --idp-singleSignOnService.url="$LLNG_SAML_IDP_SSO" \
+    --idp-singleLogoutService.url="$LLNG_SAML_IDP_SLO" \
+    --idp-singleLogoutService.responseUrl="$LLNG_SAML_IDP_SLO_RESPONSE" \
+    --idp-x509cert="$(echo -e $LLNG_SAML_SERVICE_PUBLIC_KEY | sed 's/"//g')" \
+    --sp-x509cert="$(echo -e $LLNG_SAML_SERVICE_PUBLIC_KEY | sed 's/"//g')" \
+    --sp-privateKey="$(echo -e $LLNG_SAML_SERVICE_PRIVATE_KEY | sed 's/"//g')" \
+    --sp-name-id-format="urn:oasis:names:tc:SAML:1.1:nameid-format:WindowsDomainQualifiedName" \
+    --security-nameIdEncrypted=0 \
+    --security-authnRequestsSigned=1 \
+    --security-logoutRequestSigned=1 \
+    --security-logoutResponseSigned=1 \
+    --security-signMetadata=0 \
+    --security-wantMessagesSigned=1 \
+    --security-wantAssertionsSigned=1 \
+    --security-wantAssertionsEncrypted=0 \
+    --security-wantXMLValidation=0 \
+    --security-sloWebServerDecode=1 \
+    --security-lowercaseUrlencoding=1 \
+    --security-wantNameId=0 \
+    --security-wantNameIdEncrypted=0 \
+    --security-signatureAlgorithm="http://www.w3.org/2001/04/xmldsig-more#rsa-sha256"
+
 
 echo "Nextcloud tasks execute completed"

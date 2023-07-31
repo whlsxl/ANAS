@@ -11,7 +11,7 @@ module Anas
       @required_envs = [] # TODO
       @optional_envs = [
         'NEXTCLOUD_ADMIN_PASSWORD',
-        'NEXTCLOUD_DOMAIN_PREFIX', 'NEXTCLOUD_DB_NAME', 'NEXTCLOUD_PHONE_REGION',
+        'NEXTCLOUD_DOMAIN_PREFIX', 'NEXTCLOUD_PHONE_REGION',
         'NEXTCLOUD_ADMIN_USERNAME', 'NEXTCLOUD_USER_FILTER',
         'NEXTCLOUD_DEFAULT_QUOTA', 'NEXTCLOUD_BASE_PATH', 'NEXTCLOUD_USER_MIN_PASS_LENGTH',
         'NEXTCLOUD_USER_COMPLEX_PASS', 'NEXTCLOUD_USER_MAX_PASS_AGE', 'NEXTCLOUD_RM_SKELETON_FILES',
@@ -44,17 +44,17 @@ module Anas
       new_envs['NEXTCLOUD_REDIS_PORT'] = 6379
       unless envs.has_key?('NEXTCLOUD_DB_TYPE')
         if envs.has_key?('POSTGRES_HOST')
-          new_envs['NEXTCLOUD_DB_TYPE'] = 'pgsql'
-        elsif envs.has_key?('MYSQL_HOST')
-          new_envs['NEXTCLOUD_DB_TYPE'] = 'mysql'
+          new_envs['NEXTCLOUD_DB_TYPE'] = 'postgres'
+        elsif envs.has_key?('MARIADB_HOST')
+          new_envs['NEXTCLOUD_DB_TYPE'] = 'mariadb'
         else
           raise EnvError.new("No database for nextcloud.")
         end
       end
 
-      if new_envs['NEXTCLOUD_DB_TYPE'] == 'mysql'
-        new_envs['NEXTCLOUD_NETWORK_DB'] = 'mysql'
-      elsif new_envs['NEXTCLOUD_DB_TYPE'] == 'pgsql'
+      if new_envs['NEXTCLOUD_DB_TYPE'] == 'mariadb'
+        new_envs['NEXTCLOUD_NETWORK_DB'] = 'mariadb'
+      elsif new_envs['NEXTCLOUD_DB_TYPE'] == 'postgres'
         new_envs['NEXTCLOUD_NETWORK_DB'] = 'postgres'
       end
 
@@ -65,7 +65,7 @@ module Anas
       new_envs['NEXTCLOUD_ADMIN_PASSWORD'] = envs['SAMBA_DC_ADMIN_PASSWORD'] unless envs.has_key?('NEXTCLOUD_ADMIN_PASSWORD')
       unless envs['NEXTCLOUD_USER_FILTER']
         if envs['SAMBA_DC_APP_FILTER'] == 'true'
-          new_envs['NEXTCLOUD_USER_FILTER'] = "(&#{envs['SAMBA_DC_USER_CLASS_FILTER']}(memberOf=CN=APP_nextcloud,#{envs['SAMBA_DC_BASE_APP_DN']}))"
+          new_envs['NEXTCLOUD_USER_FILTER'] = "(&#{envs['SAMBA_DC_USER_CLASS_FILTER']}(|(memberOf=CN=APP_nextcloud,#{envs['SAMBA_DC_BASE_APP_DN']})(memberOf=CN=APP_all,#{envs['SAMBA_DC_BASE_APP_DN']})))"
         else
           new_envs['NEXTCLOUD_USER_FILTER'] = "(&#{envs['SAMBA_DC_USER_CLASS_FILTER']})"
         end
@@ -99,6 +99,26 @@ module Anas
           new_envs['NEXTCLOUD_USER_MIN_PASS_LENGTH'] = 7
         end
       end
+      new_envs['SMAL_SP_APPS'] = '' unless envs.has_key?('SMAL_SP_APPS')
+      saml_apps = new_envs['SMAL_SP_APPS'].split(',')
+      saml_apps.push 'nextcloud' unless saml_apps.include? 'nextcloud'
+      new_envs['SMAL_SP_APPS'] = saml_apps.join(',')
+      new_envs['SMAL_SP__NEXTCLOUD__METADATA_URL'] = "#{new_envs['NEXTCLOUD_DOMAIN_FULL']}/apps/user_saml/saml/metadata?idp=1"
+      # var name, attr name, mandatory
+      new_envs['SMAL_SP__NEXTCLOUD__ATTR01'] = "cn,cn,1"
+      new_envs['SMAL_SP__NEXTCLOUD__ATTR02'] = "sAMAccountName,sAMAccountName,1"
+      # new_envs['SMAL_SP__NEXTCLOUD__ATTR03'] = "sAMAccountName,sAMAccountName,1"
+      new_envs['SMAL_SP__NEXTCLOUD__NAMEID_FORMAT'] = "windows"
+
+      new_envs['APPS_LIST'] = '' unless envs.has_key?('APPS_LIST')
+      apps = new_envs['APPS_LIST'].split(',')
+      apps.push 'nextcloud' unless apps.include? 'nextcloud'
+      new_envs['APPS_LIST'] = apps.join(',')
+      new_envs['APPS_LIST__NEXTCLOUD__NAME'] = 'Nextcloud' unless envs.has_key?('APPS_LIST__NEXTCLOUD__NAME')
+      new_envs['APPS_LIST__NEXTCLOUD__DESC'] = 'Self hosted file sharing and communication' unless envs.has_key?('APPS_LIST__NEXTCLOUD__DESC')
+      new_envs['APPS_LIST__NEXTCLOUD__LOGO'] = '#WORK_PATH/assets/nextcloud.png' unless envs.has_key?('APPS_LIST__NEXTCLOUD__LOGO')
+      new_envs['APPS_LIST__NEXTCLOUD__URI'] = new_envs['NEXTCLOUD_DOMAIN_FULL']
+
       return new_envs
     end
 
@@ -124,15 +144,16 @@ module Anas
       new_envs['RP_HEADER'] = 'strict-origin'
       new_envs['SUBDIR'] = ''
 
-      new_envs['DB_TYPE'] = envs['NEXTCLOUD_DB_TYPE']
-      if envs['NEXTCLOUD_DB_TYPE'] == 'pgsql'
+      if envs['NEXTCLOUD_DB_TYPE'] == 'postgres'
         new_envs['DB_HOST'] = envs['POSTGRES_HOST_PORT']
         new_envs['DB_USER'] = envs['POSTGRES_USERNAME']
         new_envs['DB_PASSWORD'] = envs['POSTGRES_PASSWORD']
-      elsif envs['NEXTCLOUD_DB_TYPE'] == 'mysql'
-        new_envs['DB_HOST'] = envs['MYSQL_HOST_PORT']
-        new_envs['DB_USER'] = envs['MYSQL_USERNAME']
-        new_envs['DB_PASSWORD'] = envs['MYSQL_PASSWORD']
+        new_envs['DB_TYPE'] = envs['NEXTCLOUD_DB_TYPE']
+      elsif envs['NEXTCLOUD_DB_TYPE'] == 'mariadb'
+        new_envs['DB_HOST'] = envs['MARIADB_HOST_PORT']
+        new_envs['DB_USER'] = envs['MARIADB_USERNAME']
+        new_envs['DB_PASSWORD'] = envs['MARIADB_PASSWORD']
+        new_envs['DB_TYPE'] = 'mysql'
       end
       new_envs['DB_NAME'] = envs['NEXTCLOUD_DB_NAME']
 
@@ -147,7 +168,7 @@ module Anas
     end
 
     def run_after_mods(envs)
-      return ['samba_dc', 'postgres', 'mysql']
+      return ['samba_dc', 'postgres', 'mariadb']
     end
 
     def services_list
