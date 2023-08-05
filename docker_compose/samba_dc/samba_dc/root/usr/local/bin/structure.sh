@@ -31,7 +31,7 @@ create_group() { # $1 group name, $2 base dn $3 description
     echo "dn: $dn is exist"
   else
     echo $( samba-tool group add "$1" --groupou="$2" --description="$3" )
-    echo "Create dn:$dn description: $3"
+    echo "Create dn:$dn description: '$3'"
   fi
 }
 
@@ -60,11 +60,11 @@ if [ $SAMBA_DC_APP_FILTER == "true" ]; then
   create_ou "OU=Groups" $SAMBA_DC_BASE_DN "Groups"
   create_ou "OU=Apps" "OU=Groups,$SAMBA_DC_BASE_DN" "Apps"
   APP_BASE="OU=Apps,OU=Groups"
-  for name in $(echo $USE_LDAP_MODS_NAME | tr "," "\n")
   # User can access all app if add to this group
-  create_group "$SAMBA_DC_APP_ALL_NAME" $APP_BASE "Can access all app when SAMBA_DC_APP_FILTER == true"
+  create_group "$SAMBA_DC_APP_ALL_NAME" "$APP_BASE" "Add user to this group, can access all app when \$SAMBA_DC_APP_FILTER == true"
+  for name in $(echo $USE_LDAP_MODS_NAME | tr "," "\n")
   do
-    create_group "APP_$name" $APP_BASE "APP_$name"
+    create_group "APP_$name" $APP_BASE "Add user to this group, can access app $name"
     # Add $SAMBA_DC_APP_ALL_NAME group to APP_$name, for recursive the permission
     add_to_group "APP_$name" "$SAMBA_DC_APP_ALL_NAME"
   done
@@ -98,7 +98,7 @@ fi
 # deal with admin
 if [ ! -z "$SAMBA_DC_ADMIN_NAME" ]; then
   echo "Deal with admin"
-  sAMAccountName=$( get_attribute_dn sAMAccountName=$SAMBA_DC_ADMIN_DN sAMAccountName )
+  sAMAccountName=$( get_attribute_dn "distinguishedName=$SAMBA_DC_ADMIN_DN" sAMAccountName )
   if [ "$sAMAccountName" == "$SAMBA_DC_ADMIN_NAME" ]; then
     echo "$SAMBA_DC_ADMIN_NAME user already exist "
   else
