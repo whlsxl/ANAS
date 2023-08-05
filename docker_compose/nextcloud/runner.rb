@@ -12,9 +12,9 @@ module Anas
       @optional_envs = [
         'NEXTCLOUD_ADMIN_PASSWORD',
         'NEXTCLOUD_DOMAIN_PREFIX', 'NEXTCLOUD_PHONE_REGION',
-        'NEXTCLOUD_ADMIN_USERNAME', 'NEXTCLOUD_USER_FILTER',
-        'NEXTCLOUD_DEFAULT_QUOTA', 'NEXTCLOUD_BASE_PATH', 'NEXTCLOUD_USER_MIN_PASS_LENGTH',
-        'NEXTCLOUD_USER_COMPLEX_PASS', 'NEXTCLOUD_USER_MAX_PASS_AGE', 'NEXTCLOUD_RM_SKELETON_FILES',
+        'NEXTCLOUD_ADMIN_USERNAME','NEXTCLOUD_DEFAULT_QUOTA', 'NEXTCLOUD_BASE_PATH', 
+        # 'NEXTCLOUD_USER_MIN_PASS_LENGTH', 'NEXTCLOUD_USER_COMPLEX_PASS', 'NEXTCLOUD_USER_MAX_PASS_AGE', 
+        'NEXTCLOUD_RM_SKELETON_FILES',
         'NEXTCLOUD_LOG_LEVEL', 'NEXTCLOUD_MEMORY_LIMIT', 'NEXTCLOUD_UPLOAD_MAX_SIZE',
         'NEXTCLOUD_DEBUG', 'NEXTCLOUD_TALK_TURN_PORT', 'NEXTCLOUD_TALK_ENABLED',
         'NEXTCLOUD_MEMORIES_ENABLED',
@@ -63,12 +63,10 @@ module Anas
       # TODO: change name
       new_envs['NEXTCLOUD_ADMIN_USERNAME'] = "#{envs['SAMBA_DC_ADMIN_NAME']}_nc" unless envs.has_key?('NEXTCLOUD_ADMIN_USERNAME')
       new_envs['NEXTCLOUD_ADMIN_PASSWORD'] = envs['SAMBA_DC_ADMIN_PASSWORD'] unless envs.has_key?('NEXTCLOUD_ADMIN_PASSWORD')
-      unless envs['NEXTCLOUD_USER_FILTER']
-        if envs['SAMBA_DC_APP_FILTER'] == 'true'
-          new_envs['NEXTCLOUD_USER_FILTER'] = "(&#{envs['SAMBA_DC_USER_CLASS_FILTER']}(|(memberOf=CN=APP_nextcloud,#{envs['SAMBA_DC_BASE_APP_DN']})(memberOf=CN=APP_all,#{envs['SAMBA_DC_BASE_APP_DN']})))"
-        else
-          new_envs['NEXTCLOUD_USER_FILTER'] = "(&#{envs['SAMBA_DC_USER_CLASS_FILTER']})"
-        end
+      if envs['SAMBA_DC_APP_FILTER'] == 'true'
+        new_envs['NEXTCLOUD_USER_FILTER'] = "(&#{envs['SAMBA_DC_USER_CLASS_FILTER']}(|(memberOf=CN=APP_nextcloud,#{envs['SAMBA_DC_BASE_APP_DN']})(memberOf=#{envs['SAMBA_DC_APP_ALL_DN']})))"
+      else
+        new_envs['NEXTCLOUD_USER_FILTER'] = "(&#{envs['SAMBA_DC_USER_CLASS_FILTER']})"
       end
       unless envs['NEXTCLOUD_USER_LOGIN_FILTER']
         attrs = envs['SAMBA_DC_USER_LOGIN_ATTRS'].split(',').append('objectGUID')
@@ -84,20 +82,26 @@ module Anas
         end
       end
 
-      unless envs['NEXTCLOUD_USER_MAX_PASS_AGE']
-        if envs['SAMBA_DC_USER_MAX_PASS_AGE']
-          new_envs['NEXTCLOUD_USER_MAX_PASS_AGE'] = envs['SAMBA_DC_USER_MAX_PASS_AGE']
-        else
-          new_envs['NEXTCLOUD_USER_MAX_PASS_AGE'] = 70
-        end
-      end
+      # unless envs['NEXTCLOUD_USER_MAX_PASS_AGE']
+      #   if envs['SAMBA_DC_USER_MAX_PASS_AGE']
+      #     new_envs['NEXTCLOUD_USER_MAX_PASS_AGE'] = envs['SAMBA_DC_USER_MAX_PASS_AGE']
+      #   else
+      #     new_envs['NEXTCLOUD_USER_MAX_PASS_AGE'] = 70
+      #   end
+      # end
 
-      unless envs['NEXTCLOUD_USER_MIN_PASS_LENGTH']
-        if envs['SAMBA_DC_USER_MAX_PASS_LENGTH']
-          new_envs['NEXTCLOUD_USER_MIN_PASS_LENGTH'] = envs['SAMBA_DC_USER_MAX_PASS_LENGTH']
-        else
-          new_envs['NEXTCLOUD_USER_MIN_PASS_LENGTH'] = 7
-        end
+      # unless envs['NEXTCLOUD_USER_MIN_PASS_LENGTH']
+      #   if envs['SAMBA_DC_USER_MAX_PASS_LENGTH']
+      #     new_envs['NEXTCLOUD_USER_MIN_PASS_LENGTH'] = envs['SAMBA_DC_USER_MAX_PASS_LENGTH']
+      #   else
+      #     new_envs['NEXTCLOUD_USER_MIN_PASS_LENGTH'] = 7
+      #   end
+      # end
+      if envs['SAMBA_DC_APP_FILTER'] == 'true'
+        # allow_groups = "APP_nextcloud, #{envs['SAMBA_DC_APP_ALL_NAME']}"
+        allow_groups = "APP_nextcloud"
+      else
+        allow_groups = ""
       end
       new_envs['SMAL_SP_APPS'] = '' unless envs.has_key?('SMAL_SP_APPS')
       saml_apps = new_envs['SMAL_SP_APPS'].split(',')
@@ -109,6 +113,7 @@ module Anas
       new_envs['SMAL_SP__NEXTCLOUD__ATTR02'] = "sAMAccountName,sAMAccountName,1"
       # new_envs['SMAL_SP__NEXTCLOUD__ATTR03'] = "sAMAccountName,sAMAccountName,1"
       new_envs['SMAL_SP__NEXTCLOUD__NAMEID_FORMAT'] = "windows"
+      new_envs['SMAL_SP__NEXTCLOUD__ALLOW_GROUPS'] = allow_groups
 
       new_envs['APPS_LIST'] = '' unless envs.has_key?('APPS_LIST')
       apps = new_envs['APPS_LIST'].split(',')
@@ -116,9 +121,16 @@ module Anas
       new_envs['APPS_LIST'] = apps.join(',')
       new_envs['APPS_LIST__NEXTCLOUD__NAME'] = 'Nextcloud' unless envs.has_key?('APPS_LIST__NEXTCLOUD__NAME')
       new_envs['APPS_LIST__NEXTCLOUD__DESC'] = 'Self hosted file sharing and communication' unless envs.has_key?('APPS_LIST__NEXTCLOUD__DESC')
-      new_envs['APPS_LIST__NEXTCLOUD__LOGO'] = '#WORK_PATH/assets/nextcloud.png' unless envs.has_key?('APPS_LIST__NEXTCLOUD__LOGO')
+      if envs.has_key?('APPS_LIST__NEXTCLOUD__LOGO_PATH')
+        # TODO: path
+        # new_envs['APPS_LIST__NEXTCLOUD__LOGO_PATH'] = 
+      else
+        new_envs['APPS_LIST__NEXTCLOUD__LOGO_PATH'] = File.join(@working_path, '/assets/nextcloud.png')
+      end
       new_envs['APPS_LIST__NEXTCLOUD__URI'] = new_envs['NEXTCLOUD_DOMAIN_FULL']
-
+      new_envs['APPS_LIST__NEXTCLOUD__DOMAIN'] = new_envs['NEXTCLOUD_DOMAIN']
+      new_envs['APPS_LIST__NEXTCLOUD__DOMAIN'] = new_envs['NEXTCLOUD_DOMAIN']
+      new_envs['APPS_LIST__NEXTCLOUD__ALLOW_GROUPS'] = allow_groups
       return new_envs
     end
 
