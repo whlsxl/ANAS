@@ -61,11 +61,13 @@ if [ $SAMBA_DC_APP_FILTER == "true" ]; then
   create_ou "OU=Apps" "OU=Groups,$SAMBA_DC_BASE_DN" "Apps"
   APP_BASE="OU=Apps,OU=Groups"
   for name in $(echo $USE_LDAP_MODS_NAME | tr "," "\n")
+  # User can access all app if add to this group
+  create_group "$SAMBA_DC_APP_ALL_NAME" $APP_BASE "Can access all app when SAMBA_DC_APP_FILTER == true"
   do
     create_group "APP_$name" $APP_BASE "APP_$name"
+    # Add $SAMBA_DC_APP_ALL_NAME group to APP_$name, for recursive the permission
+    add_to_group "APP_$name" "$SAMBA_DC_APP_ALL_NAME"
   done
-  # User can access all app if add to this group
-  create_group "APP_all" $APP_BASE "APP_all"
 fi
 
 # auto create ldap structure

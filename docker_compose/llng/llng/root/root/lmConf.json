@@ -79,7 +79,7 @@
   "managerDn": "{{SAMBA_DC_ADMINISTRATOR_DN}}",
   "managerPassword": "{{SAMBA_DC_ADMINISTRATOR_PASSWORD}}",
   "ldapBase": "{{SAMBA_DC_BASE_USERS_DN}}",
-  "ldapGroupBase": "{{SAMBA_DC_BASE_GROUPS_ROLE_DN}}",
+  "ldapGroupBase": "{{SAMBA_DC_BASE_GROUPS_DN}}",
   "AuthLDAPFilter": "{{LLNG_LDAP_AUTH_FILTER}}",
   "mailLDAPFilter": "{{LLNG_LDAP_MAIL_FILTER}}",
   "ldapVersion": 3,

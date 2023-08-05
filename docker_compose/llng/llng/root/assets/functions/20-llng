@@ -108,6 +108,7 @@ configure_lmConf() {
                   SAMBA_DC_ADMINISTRATOR_PASSWORD \
                   SAMBA_DC_BASE_USERS_DN \
                   SAMBA_DC_BASE_GROUPS_ROLE_DN \
+                  SAMBA_DC_BASE_GROUPS_DN \
                   LLNG_LDAP_AUTH_FILTER \
                   LLNG_LDAP_MAIL_FILTER \
                   SERVER_NAME \

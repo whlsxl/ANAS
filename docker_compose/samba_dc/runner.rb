@@ -60,6 +60,8 @@ module Anas
       new_envs['SAMBA_DC_BASE_USERS_DN_PREFIX'] = "OU=#{new_envs['SAMBA_DC_BASE_USERS_DN_NAME']}"
       new_envs['SAMBA_DC_BASE_USERS_DN'] = "#{new_envs['SAMBA_DC_BASE_USERS_DN_PREFIX']},#{new_envs['SAMBA_DC_BASE_DN']}"
       new_envs['SAMBA_DC_BASE_APP_DN'] = "OU=Apps,#{new_envs['SAMBA_DC_BASE_GROUPS_DN']}"
+      new_envs['SAMBA_DC_APP_ALL_NAME'] = 'APP_all' #can access all app when SAMBA_DC_APP_FILTER == true
+      new_envs['SAMBA_DC_APP_ALL_DN'] = "CN=#{envs['SAMBA_DC_APP_ALL_NAME']},#{envs['SAMBA_DC_BASE_APP_DN']}"
       new_envs['SAMBA_DC_ADMINISTRATOR_DN'] = "CN=#{new_envs['SAMBA_DC_ADMINISTRATOR_NAME']},CN=Users,#{new_envs['SAMBA_DC_BASE_DN']}"
       new_envs['SAMBA_DC_ADMIN_DN'] = "CN=#{new_envs['SAMBA_DC_ADMIN_NAME']},#{new_envs['SAMBA_DC_BASE_USERS_DN']}"
       new_envs['SAMBA_DC_ADMIN_GROUP_NAME'] = "Admins"
