@@ -150,6 +150,17 @@ module Anas
       return envs
     end
 
+    # Copy file to container when container is up
+    # 
+    # @param container_name [String] container name
+    # @param source [String] the source file path in host
+    # @param des [String] the destination file path in container
+    # @param exception [Boolean] raise exception or return result
+    # @return [Boolean] copy success or not
+    def cp_to_container(container_name, source, des, exception=true)
+      return system("docker cp #{source} #{container_name}:#{des}", exception: exception)
+    end
+
     # dependency must run before current
     # Attention: only config envs & current mods's default envs will be use, 
     # @param base_envs [Hash<String, String>] config_envs & mod's default_envs
@@ -216,7 +227,7 @@ module Anas
       Log.info("Module has been built #{@mod_name}")
     end
 
-    def after_start_action
+    def after_start_action(envs)
       Log.info("After start #{@mod_name}...")
     end
 
@@ -232,7 +243,7 @@ module Anas
         ENV.update(@envs)
         Log.info("Exec `#{@docker_compose_cmd} up #{slist} -d`")
         result = %x(#{@docker_compose_cmd} up #{slist} -d)
-        after_start_action
+        after_start_action envs
       rescue => exception
         Log.error("Start #{@mod_name} ERROR #{exception}")
         raise exception

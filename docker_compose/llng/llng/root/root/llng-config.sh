@@ -34,27 +34,66 @@ $lemonldap_ng_cli_delkey \
         globalStorageOptions Directory \
         globalStorageOptions LockDirectory
 
+traefik_ip=$( ping $TRAEFIK_HOSTNAME -c 1 | sed '1{s/[^(]*(//;s/).*//;q}' )
 for app in $APPS_LIST; do
   name="APPS_LIST__${app^^}__NAME"
   uri="APPS_LIST__${app^^}__URI"
-  logo="APPS_LIST__${app^^}__LOGO"
+  logo="APPS_LIST__${app^^}__LOGO_NAME"
   desc="APPS_LIST__${app^^}__DESC"
+  domain="APPS_LIST__${app^^}__DOMAIN"
+  allow_groups_name="APPS_LIST__${app^^}__ALLOW_GROUPS"
+  allow_groups="${!allow_groups_name}"
+
+  if [ -n "$allow_groups" ]; then
+    groups=($(echo "$allow_groups" | tr ',' ' '))
+    for group in "${groups[@]}"; do
+        app_function_call="inGroup('$group')"
+        app_function_calls+=("$app_function_call")
+    done
+    groups_filter=$(IFS='|'; echo "${app_function_calls[*]}")
+    groups_filter="$groups_filter | inGroup('$SAMBA_DC_ADMIN_GROUP_NAME')"
+  else
+    groups_filter="on"
+  fi
+
   $lemonldap_ng_cli_addkey \
         applicationList/1apps/$app type application \
-        applicationList/1apps/$app/options name ${!name} \
-        applicationList/1apps/$app/options description ${!desc} \
-        applicationList/1apps/$app/options display 'auto' \
-        applicationList/1apps/$app/options logo ${!logo} \
-        applicationList/1apps/$app/options uri ${!uri}
-  $lemonldap_ng_cli_addkey \
-        samlSPMetaDataOptions/$app samlSPMetaDataOptionsSignSLOMessage 1
+        applicationList/1apps/$app/options name "${!name}" \
+        applicationList/1apps/$app/options description "${!desc}" \
+        applicationList/1apps/$app/options tooltip "${!desc}" \
+        applicationList/1apps/$app/options display "$groups_filter" \
+        applicationList/1apps/$app/options logo "${!logo}" \
+        applicationList/1apps/$app/options uri "${!uri}"
+
+  set_host ${!domain} $traefik_ip
 done
 
 for app in $SMAL_SP_APPS; do
   metadata_url="SMAL_SP__${app^^}__METADATA_URL"
   waiting_url ${!metadata_url}
+
   $lemonldap_ng_cli_addkey \
         samlSPMetaDataXML/$app samlSPMetaDataXML "`curl ${!metadata_url}`"
+
+  # TODO: suit every app
+  $lemonldap_ng_cli_addkey \
+        samlSPMetaDataOptions/$app samlSPMetaDataOptionsSignSLOMessage 1
+
+  allow_groups_name="SMAL_SP__${app^^}__ALLOW_GROUPS"
+  allow_groups="${!allow_groups_name}"
+
+  if [ -n "$allow_groups" ]; then
+    groups=($(echo "$allow_groups" | tr ',' ' '))
+    for group in "${groups[@]}"; do
+        saml_function_call="inGroup('$group')"
+        saml_function_calls+=("$saml_function_call")
+    done
+    groups_filter=$(IFS='|'; echo "${saml_function_calls[*]}")
+    groups_filter="$groups_filter | inGroup('$SAMBA_DC_ADMIN_GROUP_NAME')"
+    $lemonldap_ng_cli_addkey \
+        samlSPMetaDataOptions/$app samlSPMetaDataOptionsRule "$groups_filter"
+  fi
+        
 
   index=1
   continue_loop=true

@@ -98,11 +98,28 @@ module Anas
         new_envs['DB_PASSWORD'] = envs['MARIADB_PASSWORD']
       end
 
+      envs['APPS_LIST'].split(',').each do |app|
+        if envs.has_key?("APPS_LIST__#{app.upcase}__LOGO_PATH")
+          envs["APPS_LIST__#{app.upcase}__LOGO_NAME"] = File.basename(envs["APPS_LIST__#{app.upcase}__LOGO_PATH"])
+        end
+      end
+
       new_envs
     end
 
     def run_after_mods(envs)
       return ['traefik']
+    end
+
+    def after_start_action(envs)
+      envs['APPS_LIST'].split(',').each do |app|
+        envs["APPS_LIST__#{app.upcase}__LOGO_NAME"] = File.basename(envs["APPS_LIST__#{app.upcase}__LOGO_PATH"])
+        cp_to_container(
+          "#{envs['CONTAINER_PREFIX']}llng",
+          envs["APPS_LIST__#{app.upcase}__LOGO_PATH"],
+          '/usr/share/lemonldap-ng/portal/htdocs/static/common/apps/'
+        )
+      end
     end
 
     def services_list
